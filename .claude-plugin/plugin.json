@@ -1,0 +1,32 @@
+{
+  "name": "hashb",
+  "description": "Dev workflow toolkit — 15 skills + domain-specific rules. Skills work for any project; domain context comes from rules organized by vertical.",
+  "version": "4.7.0",
+  "author": {
+    "name": "hashb"
+  },
+  "homepage": "https://github.com/hashb/hashb-workflow",
+  "repository": "https://github.com/hashb/hashb-workflow",
+  "license": "MIT",
+  "skills": "./skills/",
+  "keywords": [
+    "workflow",
+    "migration",
+    "security",
+    "testing",
+    "qa",
+    "engineering",
+    "multi-agent",
+    "swarm",
+    "audit",
+    "compliance",
+    "init",
+    "onboarding",
+    "spec",
+    "design",
+    "tdd",
+    "docs",
+    "documentation",
+    "hygiene"
+  ]
+}

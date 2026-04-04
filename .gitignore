@@ -1,0 +1,32 @@
+# Local settings (personal overrides)
+.claude/settings.local.json
+
+# Agent local memory
+.claude/agent-memory-local/
+
+# QA reports (generated)
+.qa-reports/
+
+# Context cache
+.context/
+
+# Environment / secrets
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Staging / drafts
+.staging/
+
+# Binary artifacts
+*.pptx
+*.ppt

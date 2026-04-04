@@ -1,0 +1,781 @@
+---
+description: >
+  Engineering — scope, architecture decisions (if needed), implementation review, TDD.
+  Technical planning for how to build what /spec defined.
+    /eng            — auto-detect mode (architecture + implementation, or implementation only)
+    /eng arch       — force architecture mode (greenfield, major subsystem)
+    /eng impl       — force implementation review only (architecture settled)
+    /eng hold       — scope lock-down pass (make it bulletproof)
+---
+
+# Eng
+
+Scope the work, make architecture decisions if needed, then review the
+implementation plan with TDD enforcement. Stream output continuously —
+gate only at decision points.
+
+**This is read-only. No code changes.**
+
+---
+
+## When to Use
+
+| Signal | Mode |
+|--------|------|
+| Greenfield project or major subsystem | `/eng` or `/eng arch` |
+| Multiple interdependent decisions (>3) | `/eng arch` |
+| After `/research`, need to decide | `/eng arch` |
+| Feature work, architecture settled | `/eng` or `/eng impl` |
+| Reviewing an existing implementation plan | `/eng impl` |
+| Making an existing plan bulletproof | `/eng hold` |
+
+---
+
+## Presentation Rules
+
+1. **Stream by default** — output all phases continuously with clear section headers. Do NOT stop between phases unless a decision gate is reached. The user can interrupt at any point.
+2. **Roadmap first** — open with the phase roadmap so the user knows what's ahead.
+3. **Summary table before detail** — every phase opens with a table, expands only where needed.
+4. **Tables over prose** — use tables for comparisons, options, checklists. Prose for context only.
+5. **Visual separators** — use `---` between phases and `> blockquotes` for key callouts.
+6. **Discussion chunking** — when a response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time. Use judgment: chunk when it feels like a wall of text.
+7. **Tables at column 0** — inside card blocks (decorative borders), tables MUST start at column 0 (no leading spaces). Indented tables break CommonMark rendering. Non-table content (key-value pairs, labels) can stay indented for visual alignment.
+8. **Progress indicator** — every output starts with:
+
+```
+/eng ════════════════════════════════════════════════════════════
+
+  ▸ Phase 0  Scope                ~2 min
+  ○ Phase 1  Architecture Decs    ~5 min/decision
+  ○ Phase 2  Cross-Cut Validation ~3 min
+  ○ Phase 3  Implementation Rev   ~8 min
+  ○ Phase 4  TDD Plan             ~5 min
+  ○ Phase 5  Summary              ~2 min
+
+════════════════════════════════════════════════════════════════
+```
+
+Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
+Completed phases show a status note on the right (e.g., `✓ impl mode`, `✓ 2 issues`).
+Skipped phases omit the time estimate.
+
+---
+
+## Complexity Routing
+
+Assess complexity at the start and adjust depth:
+
+| Complexity | Signal | Behavior |
+|------------|--------|----------|
+| **Small** | Single file, clear fix, ≤3 files touched | Combine scope + review + TDD into one response. 1 gate (final TDD plan confirmation) |
+| **Medium** | 3-8 files, known architecture, standard patterns | Stream phases continuously. 2 gates (after scope+approach, after TDD plan) |
+| **Large** | Greenfield, 8+ files, architecture decisions needed, new domain | Full flow with arch decisions. 2 gates + per-decision confirmations for arch |
+
+---
+
+## Phase Roadmap (present this first)
+
+| Phase | Name | When it runs | What happens |
+|-------|------|-------------|-------------|
+| 0 | Scope | Always | Identify system, constraints, determine mode, list what needs deciding |
+| 1 | Architecture Decisions | If arch decisions needed | Walk decisions one at a time, validate, produce ADRs |
+| 2 | Cross-Cut Validation | After Phase 1 only | Validate all decisions together, risk register |
+| 3 | Implementation Review | Always | Single-pass review: premise, approach, architecture, errors, tests, performance |
+| 4 | TDD Plan | Always | Test-first strategy: what tests to write before implementation, in what order |
+| 5 | Summary | Always | Combined output, ADRs + findings + TDD plan, next steps |
+
+> Phases 1-2 are **conditional** — skipped automatically in `/eng impl` mode
+> or when Phase 0 determines no architecture decisions are needed.
+>
+> **Routing after Phase 0:**
+> - Architecture decisions needed? → **Proceed to Phase 1**
+> - No architecture decisions? → **Skip to Phase 3**
+> - `/eng impl` mode? → **Skip to Phase 3**
+> - `/eng hold` mode? → **Skip to Phase 3** (scope lock-down only)
+
+---
+
+## Before You Start
+
+### Read Upstream Artifacts
+
+Check for `/spec` and `/design` handoff summaries in the conversation context:
+- **Spec handoff** → problem statement, user stories, requirements, acceptance criteria,
+  constraints, assumptions. Read the full spec phases for detail.
+- **Design handoff** → screens, components, states, flows, accessibility requirements.
+  Read the full design phases for wireframes and state machines.
+
+If no upstream artifacts exist, gather requirements from the user directly.
+
+### Spec Challenge Gate
+
+While reading the spec, actively look for flaws. If any of these are found,
+raise a **Spec Challenge** before proceeding to Phase 0:
+
+| Flaw type | Example |
+|-----------|---------|
+| Contradictory requirements | "Must be real-time" + "batch process nightly" |
+| Missing edge case | No handling for zero-quantity items |
+| Technically impossible | "Sub-millisecond response with full table scan" |
+| Ambiguous acceptance criteria | "Should be fast" without a measurable target |
+| Scope gap | Spec says multi-tenant but no AC tests tenant isolation |
+
+**Spec Challenge format:**
+
+```
+⚠ SPEC CHALLENGE
+──────────────────────────────────────────────
+  Issue:    {what's wrong — specific, with evidence}
+  Impact:   {what happens if we build this as-is}
+  Options:
+    A) Fix spec — {what needs to change}
+    B) Proceed with known risk — {the risk accepted}
+    C) Descope — {what to cut}
+
+  Recommendation: {A, B, or C + one sentence why}
+──────────────────────────────────────────────
+```
+
+> **STOP.** User must resolve the challenge before /eng proceeds.
+> Multiple challenges? Present them one at a time.
+
+If no flaws found, proceed silently — don't report "spec looks fine."
+
+### Read Project Profile
+
+Check the consumer's `CLAUDE.md` for a **Project Profile** section. If present,
+use it to adapt review checks throughout all phases:
+- Stack → which framework rules and patterns to validate against
+- Architecture → what coupling and boundary checks matter
+- Testing → what test runner and patterns to expect
+- Deploy → what deployment constraints to consider
+- MCP Servers → Context7 is required for doc verification; additional servers available
+
+### Scan for Prior Learnings
+
+Check `.retro/` for retro reports mentioning the affected codebase area.
+If recurring issues exist, flag them as known risks in Phase 0.
+
+### Gather Context
+
+```bash
+git log --oneline -15
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo "main")
+echo "BRANCH: $BRANCH  BASE: $BASE"
+git diff $(git merge-base HEAD $BASE)..HEAD --stat
+grep -r "TODO\|FIXME\|HACK" -l --exclude-dir={node_modules,vendor,.git,dist,build} . | head -20
+```
+
+Read if they exist: `CLAUDE.md`, `TODOS.md`, `docs/designs/`.
+
+### Verify with Context7
+
+When the engineering plan involves libraries, frameworks, or APIs, query Context7
+to verify assumptions before making architecture decisions:
+
+1. **Resolve library IDs** — call `resolve-library-id` for each key library
+   in the scope. Confirm the latest stable version matches what the
+   codebase uses or intends to use.
+2. **Spot-check capabilities** — call `query-docs` for any library capability
+   that is load-bearing in the architecture (e.g., "Does library X support
+   streaming responses?" or "Does ORM Y handle composite primary keys?").
+
+**Rules:**
+- Max 2 `resolve-library-id` calls during context gathering (not a research phase).
+- Max 2 `query-docs` calls during context gathering.
+- If a capability assumption cannot be verified, flag it as an **Unknown** in
+  the scope card (Phase 0, row 5).
+- Do NOT do full library evaluation here — that is `/research`'s job. This is
+  a quick verification pass.
+
+---
+
+## Phase 0 — Scope
+
+### Mode Detection
+
+If mode wasn't specified by the user, determine it:
+
+| Signal | Mode |
+|--------|------|
+| No codebase exists yet | Architecture (`/eng arch`) |
+| User asking about system design, tech selection | Architecture |
+| Multiple technology decisions unmade (>3) | Architecture |
+| Codebase exists, architecture decisions settled | Implementation (`/eng impl`) |
+| User provides specific files/branches/codepaths | Implementation |
+| Ambiguous | Ask the user |
+
+### Scope Card
+
+| # | Step | What to answer | Output |
+|---|------|----------------|--------|
+| 1 | System | What system/subsystem? | System name |
+| 2 | Constraints | What's already decided? (mandated tech, existing systems) | Constraint list |
+| 3 | Scale | Users, data volume, team size | Scale parameters |
+| 4 | Decisions | What needs deciding? (architecture and/or implementation) | Numbered list |
+| 5 | Known risks | Recurring issues from retros? Prior review findings? | Risk list or "none" |
+
+Present the scope card:
+
+```
+ENG SCOPE ───────────────────────────────────────────────────────
+
+  System        {name}
+  Mode          {arch | impl | auto}
+  Constraints   {what's locked in}
+  Scale         {targets}
+  Known risks   {from retros, or "none"}
+
+  DECISIONS / REVIEW ITEMS
+  ─────────────────────────────────────────────────
+  1.  [{topic}]  {decision or review item}
+  2.  [{topic}]  {decision or review item}
+
+─────────────────────────────────────────────────────────────────
+```
+
+> **GATE 1.** Confirm scope, mode, and decision/review list with the user.
+
+**After user confirms, state the route explicitly:**
+
+```
+ROUTE: {Architecture decisions needed → Phase 1 | No arch decisions → Skip to Phase 3}
+```
+
+---
+
+## Phase 1 — Architecture Decisions (conditional)
+
+**Skip if:** `/eng impl` mode, or Phase 0 determined no arch decisions needed.
+
+Process decisions **one at a time** in the agreed order.
+
+### Context7 Verification (per decision)
+
+For any architecture decision that depends on library or API capabilities:
+
+1. Call `resolve-library-id` to confirm the library exists and get the latest
+   stable version.
+2. Call `query-docs` with the specific capability question (e.g., "Does
+   Next.js App Router support parallel routes with shared layouts?").
+3. Include the Context7 source version in the decision card's **Context** field.
+
+If Context7 lacks the library, note it and recommend `/research` for that
+specific decision before committing.
+
+**Limits:** Max 3 `resolve-library-id` + 3 `query-docs` per architecture
+decision. This is verification, not research.
+
+### Per-Decision Card
+
+```
+DECISION #1: {title} ────────────────────────────────────────────
+
+  Context       {why — 1 sentence}
+  Depends on    {prior decisions}
+
+| Option | Summary      | Standards  | Trade-off  |
+|--------|--------------|------------|------------|
+| A      | {1 sentence} | 12F, OWASP | {cost}     |
+| B      | {1 sentence} | {which}    | {cost}     |
+| C      | {if needed}  | {which}    | {cost}     |
+
+  ➤ RECOMMEND: {letter} — {one sentence why}
+
+  VALIDATION
+  ─────────────────────────────────────────────────
+  OWASP .............. {pass | violation: ...}
+  12-Factor .......... {pass | violation: ...}
+  Well-Architected ... {pass | violation: ...}
+  Prior decisions .... {consistent | conflict}
+
+─────────────────────────────────────────────────────────────────
+```
+
+### After User Decides — Record ADR
+
+```
+ADR-{NNN}: {title} ──────────────────────────────────────────────
+
+  Status         Accepted
+  Date           {today}
+  Context        {why — 1-2 sentences}
+  Decision       {what was decided}
+  Consequences   {positive} / {trade-off}
+
+─────────────────────────────────────────────────────────────────
+```
+
+> Confirm ADR, then move to next decision.
+
+**Batch rule:** Independent, low-impact decisions can be grouped into one
+table with individual recommendations. Reserve one-at-a-time for large or
+interdependent decisions.
+
+---
+
+## Phase 2 — Cross-Cut Validation (conditional)
+
+**Skip if:** Phase 1 was skipped (no architecture decisions made).
+
+Stream directly after all architecture decisions are confirmed.
+
+### Summary Table
+
+| Check | Question | Result |
+|-------|----------|--------|
+| Consistency | Do all decisions work together? | pass / issues |
+| OWASP | Security gaps across combined architecture? | pass / violations |
+| 12-Factor | Cloud-native alignment? | pass / violations |
+| Well-Architected | Reliability, performance, cost? | pass / violations |
+| Gaps | Any decisions needed but not made? | none / list |
+| Risks | Top 3-5 architectural risks | severity + mitigation |
+
+### Detail (expand only if issues found)
+
+```
+⚠ ISSUE: {check name} — {one-line summary}
+  ─────────────────────────────────────────────────
+  Detail      {what's wrong}
+  Affected    ADR-{NNN}, ADR-{NNN}
+  Fix         {recommendation}
+```
+
+### Risk Register
+
+| # | Risk | Severity | Mitigation |
+|---|------|----------|------------|
+| 1 | {risk description} | High | {plan} |
+| 2 | {risk description} | Medium | {plan} |
+
+Continue streaming to Phase 3 (no stop here unless issues need user resolution).
+
+---
+
+## Phase 3 — Implementation Review (always runs)
+
+> In all modes: **no silent scope changes**. Every addition or cut is an
+> explicit user decision.
+
+This is a **single-pass review** that produces findings tables. Stream all
+sections continuously — do not stop between sections. Present issues inline
+and recommend fixes; only stop if a decision is needed from the user.
+
+### 3A. Premise & Approach
+
+| Question | Answer |
+|----------|--------|
+| **Right problem?** Most direct path to the outcome? | {2-3 sentences} |
+| **What exists?** Sub-problems mapped to existing code. Rebuilds flagged. | {2-3 sentences} |
+| **Do-nothing baseline.** What if we ship nothing? | {2-3 sentences} |
+
+**Implementation Alternatives:**
+
+| | Approach A: {name} | Approach B: {name} | Approach C: {name} |
+|---|---|---|---|
+| **Summary** | {1-2 sentences} | {1-2 sentences} | {1-2 sentences} |
+| **Effort** | S / M / L | S / M / L | S / M / L |
+| **Risk** | Low / Med / High | Low / Med / High | Low / Med / High |
+| **Reuses** | {existing code} | {existing code} | {existing code} |
+| **Pros** | {bullets} | {bullets} | {bullets} |
+| **Cons** | {bullets} | {bullets} | {bullets} |
+
+> One must be "minimal viable" (smallest diff). One must be "ideal architecture".
+
+**Scope Check:**
+
+| Check | Question | Result |
+|-------|----------|--------|
+| Minimum viable | Smallest change that achieves the goal? | {answer} |
+| Complexity smell | >8 files or >2 new classes? | {yes/no — challenge if yes} |
+| TODOS.md cross-ref | Block, unlock, or duplicate existing TODOs? | {answer} |
+
+If complexity smell triggers, recommend scope reduction.
+
+**Implementation Order** (skip if single-tier):
+
+| Order | Tier | What to build | Why this order |
+|-------|------|---------------|----------------|
+| 1 | {tier} | {what} | {why first} |
+| 2 | {tier} | {what} | {depends on 1} |
+| 3 | {tier} | {what} | {depends on 2} |
+
+**`/eng hold` only:** Scope is locked. Challenge complexity harder. Skip expansion suggestions.
+
+```
+APPROACH VERDICT: {CLEAR | ISSUES | BLOCKED} ──────────────────
+
+  Approach    {chosen approach}
+  Scope       {accepted / reduced}
+  Order       {sequence}
+
+────────────────────────────────────────────────────────────────
+```
+
+> If approach needs a user decision (multiple viable options, scope reduction needed),
+> pause here. Otherwise, continue streaming.
+
+### 3B. Architecture & Security
+
+| Area | Status | Notes |
+|------|--------|-------|
+| System diagram | {done} | — |
+| Data flows | {ok / issues} | {brief} |
+| State machines | {ok / n/a} | {brief} |
+| Coupling | {ok / concern} | {brief} |
+| Scaling (10x) | {ok / breaks} | {brief} |
+| Rollback plan | {exists / missing} | {brief} |
+| Auth & access | {ok / gaps} | {brief} |
+| Input validation | {ok / gaps} | {brief} |
+| Secrets handling | {ok / issues} | {brief} |
+| New dependencies | {ok / concern} | {brief} |
+| Runtime wiring | {ok / needs changes} | {registrations, config, env vars} |
+| Failure scenarios | {covered / gaps} | {brief} |
+
+> **Runtime wiring check:** Does this feature require changes outside its own
+> code to function at runtime? Check: service registrations (DI, routes,
+> middleware, event subscriptions), pipeline or protocol configuration,
+> environment variables, config file additions. Features that need external
+> wiring but don't get it will compile and pass unit tests but fail at runtime.
+
+**ASCII System Diagram** (mandatory): Show new components and relationships to existing ones.
+
+**Issues** (expand only for non-ok rows):
+
+```
+⚠ ISSUE #{N}: {area} — {one-line summary}
+  ─────────────────────────────────────────────────
+  Problem     {what's wrong}
+  Impact      {what breaks}
+  Fix         {recommendation}
+  Severity    CRITICAL GAP | WARNING | INFO
+```
+
+### 3C. Error Map & Code Quality
+
+**Error Map:**
+
+| Codepath | Failure | Exception | Caught? | User Sees |
+|----------|---------|-----------|---------|-----------|
+| {path} | {failure} | {type} | Y | {message} |
+| {path} | {failure} | {type} | **N ← GAP** | 500 |
+
+> Any row with **Caught=N** and **User Sees=500/silent** → **CRITICAL GAP**
+
+**Error Handling Patterns:**
+
+| Pattern | Verdict |
+|---------|---------|
+| Catch-all (`rescue StandardError`, `except Exception`) | Smell — name specific exceptions |
+| Swallow and log | Almost never acceptable |
+| LLM/AI calls | Must handle: malformed, empty, refusal, hallucinated JSON — each distinct |
+| Every caught error must | Retry with backoff, degrade gracefully, OR re-raise with context |
+
+**Code Quality:**
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| DRY violations | {ok / found} | {file:line refs} |
+| Naming | {ok / issues} | {specifics} |
+| Over-engineering | {ok / found} | {what} |
+| Under-engineering | {ok / found} | {what} |
+| Stale diagrams | {ok / found} | {which files} |
+
+### 3D. Tests
+
+**Coverage Map:**
+
+| Category | Items | Happy Path | Failure Path | Edge Cases |
+|----------|-------|------------|--------------|------------|
+| New UX flows | {list} | {covered?} | {covered?} | {covered?} |
+| New data flows | {list} | {covered?} | {covered?} | {covered?} |
+| New codepaths | {list} | {covered?} | {covered?} | {covered?} |
+| Background jobs | {list} | {covered?} | {covered?} | {covered?} |
+| New integrations | {list} | {covered?} | {covered?} | {covered?} |
+| Error paths | {from error map} | — | {covered?} | {covered?} |
+
+**Edge Cases:**
+
+| Scenario | Covered? |
+|----------|----------|
+| Double-submit | {Y/N} |
+| Navigate-away mid-action | {Y/N} |
+| Stale state | {Y/N} |
+| Retry while in-flight | {Y/N} |
+| Zero results | {Y/N} |
+| 10k results | {Y/N} |
+| Results change mid-page | {Y/N} |
+| Partial job completion | {Y/N} |
+| Duplicate job execution | {Y/N} |
+
+> **Confidence check:** What test would make you confident shipping at 2am Friday?
+
+### 3E. Performance & Deployment
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| N+1 queries | {ok / found} | {where} |
+| Missing indexes | {ok / found} | {which} |
+| Unbounded result sets | {ok / found} | {where} |
+| Top 3 slowest codepaths | {acceptable?} | {which} |
+| Migration backward-compat | {yes / no} | {detail} |
+| Zero-downtime deploy | {yes / no} | {detail} |
+| Deploy order | {simple / ordered} | {sequence} |
+| Old+new code simultaneously | {safe / breaks} | {what} |
+
+### Review Findings Summary
+
+After streaming all sections, present a consolidated findings summary:
+
+```
+REVIEW FINDINGS ─────────────────────────────────────────────────
+
+  Architecture       {N} issues ({N} critical)
+  Errors & Quality   {N} issues, {N} CRITICAL GAPS
+  Tests              {N} coverage gaps
+  Performance        {N} issues
+
+  CRITICAL (must resolve before TDD):
+  ─────────────────────────────────────────────────
+  {numbered list of critical gaps, or "None"}
+
+  DECISIONS NEEDED:
+  ─────────────────────────────────────────────────
+  {numbered list of unresolved choices, or "None — all clear"}
+
+─────────────────────────────────────────────────────────────────
+```
+
+> If there are decisions needed, pause for user input.
+> If all clear, continue streaming to Phase 4.
+
+---
+
+## Phase 4 — TDD Plan (always runs)
+
+> **Test-Driven Development is mandatory.** Implementation follows TDD:
+> write failing tests first, then implement to make them pass, then refactor.
+> This phase produces the test-first execution plan.
+
+### 4A. Test Strategy
+
+Determine the TDD approach based on scope:
+
+| Scope | TDD Approach |
+|-------|-------------|
+| Single module, well-defined behavior | Classic TDD — unit tests first per function |
+| Multi-module feature | ATDD — acceptance tests from spec criteria first, then unit tests per module |
+| API or service | Contract tests first (request/response shapes), then implementation |
+| UI feature | Component behavior tests first (from `/design` states), then implementation |
+| Bug fix | Regression test first (reproduces the bug), then fix |
+
+### 4B. Test-First Execution Order
+
+Map the implementation order (from Phase 3) to a test-first sequence.
+For each tier, define what tests to write **before** the implementation code.
+
+| Order | What to test first | Test type | Derives from |
+|-------|-------------------|-----------|--------------|
+| 1 | {acceptance test from spec criteria} | Integration / E2E | Spec FR-{N}, AC-{N} |
+| 2 | {contract test for new API/service} | Contract | Phase 3, 3B |
+| 3 | {unit test for core business logic} | Unit | Phase 3, 3A approach |
+| 4 | {unit test for error handling} | Unit | Phase 3, 3C error map |
+| 5 | {edge case tests} | Unit | Phase 3, 3D edge cases |
+
+**Rules:**
+- Every row in the Phase 3 coverage map MUST have a corresponding test-first entry
+- Tests derive from spec acceptance criteria (if `/spec` was run) or from the
+  implementation review's coverage map
+- Each test must be writable **without** the implementation existing — test the
+  interface, not the internals
+- Tests for error paths are not optional — include every CRITICAL GAP from 3C
+- **No placeholders.** Every test entry must name the specific function/endpoint/component
+  under test, the exact input scenario, and the expected outcome. "Test user creation"
+  is not acceptable — "Test POST /users with valid email returns 201 and user object
+  with id" is. The implementer should be able to write the test from this entry alone
+
+### 4C. Red-Green-Refactor Checkpoints
+
+Define explicit checkpoints where the implementer should verify the TDD cycle:
+
+```
+TDD CHECKPOINTS:
+  CP-1: {acceptance tests written and RED}    → verify: tests fail for the right reason
+  CP-2: {tier 1 implemented, tests GREEN}     → verify: minimal code to pass, no extras
+  CP-3: {refactor tier 1}                     → verify: tests still GREEN after cleanup
+  CP-4: {tier 2 tests written and RED}        → verify: tests fail for the right reason
+  CP-5: {tier 2 implemented, tests GREEN}     → verify: all tests pass including tier 1
+  ...
+```
+
+### 4D. Test Infrastructure
+
+| Need | Exists? | Action |
+|------|---------|--------|
+| Test runner configured | {yes / no} | {skip / set up} |
+| Test database / fixtures | {yes / no / n/a} | {skip / create} |
+| Mock server for external APIs | {yes / no / n/a} | {skip / create} |
+| Component test harness | {yes / no / n/a} | {skip / create} |
+| CI pipeline runs tests | {yes / no} | {skip / add} |
+
+> **GATE 2.** Confirm TDD plan with the user. This is the execution contract
+> for implementation.
+
+---
+
+## Phase 5 — Summary
+
+### If Architecture Decisions Were Made
+
+```
+✓ ENG COMPLETE ──────────────────────────────────────────────────
+
+  System       {name}
+  Mode         {arch + impl | impl only}
+  ADRs         {N} produced
+  Standards    OWASP, 12-Factor, Well-Architected
+  Risks        {N} identified, {N} mitigated
+
+  FINDINGS
+  ─────────────────────────────────────────────────
+  Architecture       {N} issues
+  Errors & Quality   {N} issues, {N} CRITICAL GAPS
+  Tests              {N} gaps
+  Performance        {N} issues
+  TDD plan           {N} test-first entries, {M} checkpoints
+
+  CRITICAL
+  ─────────────────────────────────────────────────
+  Critical gaps      {N} — {list}
+  Unresolved         {N} — {list}
+
+  ADR SUMMARY
+  ─────────────────────────────────────────────────
+  001  {title} — {decision}
+  002  {title} — {decision}
+
+  TDD EXECUTION ORDER
+  ─────────────────────────────────────────────────
+  1.  {test} → {implementation} → {checkpoint}
+  2.  {test} → {implementation} → {checkpoint}
+
+  ➤ NEXT: /tdd → /review → /qa → /ship (see Next Step below)
+
+─────────────────────────────────────────────────────────────────
+```
+
+### If Implementation Review Only
+
+```
+✓ ENG COMPLETE ──────────────────────────────────────────────────
+
+  Branch       {branch} → {base}
+  Scope        {accepted / reduced}
+
+  FINDINGS
+  ─────────────────────────────────────────────────
+  Architecture       {N} issues
+  Errors & Quality   {N} issues, {N} CRITICAL GAPS
+  Tests              {N} gaps
+  Performance        {N} issues
+  TDD plan           {N} test-first entries, {M} checkpoints
+
+  CRITICAL
+  ─────────────────────────────────────────────────
+  Critical gaps      {N} — {list}
+  Unresolved         {N} — {list}
+
+  TDD EXECUTION ORDER
+  ─────────────────────────────────────────────────
+  1.  {test} → {implementation} → {checkpoint}
+  2.  {test} → {implementation} → {checkpoint}
+
+  ➤ NEXT: /tdd → /review → /qa → /ship (see Next Step below)
+
+─────────────────────────────────────────────────────────────────
+```
+
+### Swarm Suggestion
+
+If scope is large (>8 files, multiple tiers, or multiple independent areas):
+
+> This scope spans {N} independent areas. Consider `/swarm plan` to
+> decompose into parallel streams. The scope card and implementation
+> order above can feed directly into stream decomposition.
+
+### Next Step
+
+| Condition | Next Skill | Why |
+|-----------|-----------|-----|
+| Standard feature | `/tdd` → `/review` | Execute TDD plan, then review |
+| Scope is large (>8 files, multiple areas) | `/swarm plan` | Decompose into parallel streams |
+| Implementation complete | `/review` | Peer review before QA |
+
+**Autonomous mode:** If running inside a recipe chain, auto-invoke `/tdd` with
+the TDD Execution Order from Phase 4. After `/tdd` completes, auto-invoke `/review`.
+If `/review` returns APPROVED, auto-invoke `/qa`. Follow the autonomous gate rules
+defined in `recipes.md`.
+
+---
+
+## How to Ask Questions
+
+| Step | What to do |
+|------|------------|
+| 1. State problem | Concrete, with file:line refs. Assume user hasn't looked at code in 20 min |
+| 2. Options | 2-3 lettered options (A, B, C). One sentence + effort + risk each |
+| 3. Recommend | Pick one, say why in one sentence. Prefer completeness |
+| 4. Label | Issue NUMBER + option LETTER (e.g., "3A", "3B") |
+
+**Escape hatch:** No issues? Say so and move on. Obvious fix? State it and move on.
+
+---
+
+## Required Outputs
+
+### Failure Modes Registry (from 3C)
+
+| Codepath | Failure | Caught? | Tested? | User Sees |
+|----------|---------|---------|---------|-----------|
+| {path} | {failure} | Y/N | Y/N | {what} |
+
+> Any row with **Caught=N + Tested=N** → **CRITICAL GAP**
+
+### TDD Execution Plan (from Phase 4)
+
+| Order | Test (RED) | Implement (GREEN) | Refactor | Checkpoint |
+|-------|-----------|-------------------|----------|------------|
+| 1 | {what test to write} | {what code to write} | {cleanup} | CP-{N} |
+
+### Open Items
+
+| Category | Item | Rationale |
+|----------|------|-----------|
+| Not in scope | {deferred work} | {one-line why} |
+| Unresolved | {unanswered decision} | {never silently default} |
+
+---
+
+## Rules
+
+| Rule | Why |
+|------|-----|
+| Read-only | No code changes, no file creation. ADRs inline; user decides where to save |
+| Stream by default | Output continuously. Gate only at decision points (scope, TDD plan) |
+| 2 gates default | Gate 1: scope confirmation. Gate 2: TDD plan confirmation. Add gates when a user decision is genuinely needed (multiple viable approaches, scope reduction, critical gap requiring user input). Don't gate for confirmation — gate for decisions |
+| Single-pass review | Phase 3 is one continuous review, not 5 interactive sub-steps |
+| Tables at column 0 | Tables inside card blocks must not be indented — breaks CommonMark rendering |
+| Be opinionated | Recommend one option. "It depends" is not engineering |
+| Carry context forward | Each section references relevant prior decisions |
+| Don't implement | Redirect to implementation after TDD plan is approved |
+| TDD is mandatory | Every implementation must have a test-first plan. No exceptions |
+| Tests before code | The TDD plan defines what tests to write first. Implementation makes them pass |
+| Favor simplicity | When options are close, pick fewer moving parts |
+| High-level first | Always show summary table before expanding into detail |
+| Tables over walls of text | Tables for structured data. Prose only for context |
+| No silent scope changes | Every addition or cut is an explicit user decision |
+| Respect Project Profile | Adapt checks to consumer's declared stack and architecture |
+| Consume upstream artifacts | If `/spec` or `/design` handoffs exist, use them. Don't re-derive requirements |
+| Verify via Context7 | Architecture decisions touching libraries must be spot-checked against Context7 docs. Flag unverifiable assumptions |
+| Complexity routing | Small tasks get single-pass output. Large tasks get full flow. Match depth to scope |
