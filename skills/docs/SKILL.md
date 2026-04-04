@@ -1,5 +1,10 @@
 ---
-description: "Document hygiene — find stale, obsolete, duplicate, and scattered docs. Sync, consolidate, update, or remove. Interactive."
+name: docs
+description: >
+  Document hygiene — find stale, obsolete, duplicate, and scattered docs. Sync, consolidate, update, or remove.
+  Use when docs feel stale, scattered, or bloated. Scans, classifies, and cleans documentation with per-document approval.
+  Modes: /docs (full pass), /docs stale, /docs sync, /docs sweep.
+argument-hint: "[\"stale\" or \"sync\" or \"sweep\"]"
 ---
 
 # Document Hygiene
@@ -55,26 +60,7 @@ Phase 4: Verify & Report
 
 ---
 
-## Presentation Rules
-
-1. **Wizard flow** — present one phase at a time. Never dump everything at once.
-2. **Discussion chunking** — when a follow-up response would be too dense to digest
-   in one shot, present a numbered big-picture overview first, then discuss each
-   point one at a time, waiting for user input between points.
-3. **Progress indicator** — every output starts with:
-
-```
-/docs ═══════════════════════════════════════════════════════════
-
-  ▸ Phase 1    Inventory         ~2 min
-  ○ Phase 2    Classify          ~5 min
-  ○ Phase 3    Act               ~5 min
-  ○ Phase 4    Verify & Report   ~1 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as phases progress.
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

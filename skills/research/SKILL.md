@@ -1,5 +1,9 @@
 ---
-description: Pre-planning research — libraries, APIs, patterns, ecosystem.
+name: research
+description: >
+  Pre-planning research — libraries, APIs, patterns, ecosystem.
+  Use when evaluating technology choices, comparing libraries, investigating APIs, or assessing ecosystem options before building.
+argument-hint: "[question or topic]"
 ---
 
 # Pre-Planning Research
@@ -24,27 +28,7 @@ existing patterns with no new dependencies.
 
 ## Presentation Rules
 
-1. **Wizard flow** — present one phase at a time. Never dump everything at once.
-2. **Summary table before detail** — every phase opens with a table, expands only where needed.
-3. **Tables over prose** — use tables for comparisons, options, checklists. Prose for context only.
-4. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-5. **Progress indicator** — every output starts with:
-
-```
-/research ═══════════════════════════════════════════════════════
-
-  ▸ Phase 0  Existing Landscape    ~2 min
-  ○ Phase 1  Scope                 ~2 min
-  ○ Phase 2  Investigate           ~8 min
-  ○ Phase 3  Compare               ~3 min
-  ○ Phase 4  Recommend             ~2 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
-Completed phases show a status note on the right (e.g., `✓ 3 questions`, `✓ Zustand`).
-Skipped phases omit the time estimate.
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

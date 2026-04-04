@@ -1,5 +1,8 @@
 ---
-description: Peer code review — agent-to-agent or agent-to-human. Confidence-scored, blocks ship on low confidence.
+name: review
+description: >
+  Peer code review — agent-to-agent or agent-to-human. Confidence-scored, blocks ship on low confidence.
+  Use when code is written and ready for review before shipping. Reviews diff against plan, rules, and quality standards.
 ---
 
 # Peer Code Review
@@ -29,22 +32,7 @@ that tests won't find and QA can't see.
 
 ## Presentation Rules
 
-1. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-2. **Progress indicator** — every output starts with:
-
-```
-/review ═════════════════════════════════════════════════════════
-
-  ▸ Phase 1  Scope the Review      ~2 min
-  ○ Phase 2  Review Checklist      ~10 min
-  ○ Phase 3  Findings              ~3 min
-  ○ Phase 4  Verdict               ~2 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as phases progress.
-Completed phases show a status note (e.g., `✓ 12 files`, `✓ 3 blocking`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

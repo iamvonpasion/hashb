@@ -2,7 +2,7 @@
 description: >
   Plugin versioning rule — when and how to bump the version in plugin.json,
   marketplace.json, and CHANGELOG.md. Triggered when skills, rules, or plugin config change.
-globs:
+paths:
   - skills/**/*
   - rules/**/*
   - .claude-plugin/plugin.json

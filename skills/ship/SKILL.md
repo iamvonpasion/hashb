@@ -1,5 +1,8 @@
 ---
-description: Ship — test, review, version, changelog, commit, PR. Fully automated.
+name: ship
+description: >
+  Ship — test, review, version, changelog, commit, PR. Fully automated.
+  Use when code is ready to ship. Runs tests, checks review status, bumps version, updates changelog, creates commit and PR. Say /ship and it handles the rest.
 ---
 
 # Ship
@@ -20,30 +23,7 @@ the PR URL at the end.
 - CHANGELOG content (auto-generate)
 - Commit message approval (auto-commit)
 
-## Presentation Rules
-
-1. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-2. **Progress indicator** — every output starts with:
-
-```
-/ship ═══════════════════════════════════════════════════════════
-
-  ▸ Step 1    Pre-flight            ~1 min
-  ○ Step 2    Merge Base Branch     ~1 min
-  ○ Step 2.5  Build & Lint          ~2 min
-  ○ Step 3    Run Tests             ~2 min
-  ○ Step 3.5  Pre-Landing Review    ~3 min
-  ○ Step 4    Version Bump          ~1 min
-  ○ Step 5    Changelog             ~1 min
-  ○ Step 6    Commit                ~1 min
-  ○ Step 7    Push                  ~1 min
-  ○ Step 8    Create PR             ~1 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as steps progress.
-Completed steps show a status note (e.g., `✓ tests pass`, `✓ v4.1.0`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

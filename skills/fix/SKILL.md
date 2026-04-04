@@ -1,5 +1,9 @@
 ---
-description: Systematic debugging — investigate, hypothesize, fix, verify. No fixes without root cause.
+name: fix
+description: >
+  Systematic debugging with root cause analysis.
+  Use when something is broken, errors appear, or behavior is unexpected. Gathers evidence, tests hypotheses, writes regression tests, fixes the root cause. No band-aid fixes.
+argument-hint: "[bug description]"
 ---
 
 # Investigate
@@ -13,22 +17,7 @@ address root cause makes the next bug harder to find.
 
 ## Presentation Rules
 
-1. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-2. **Progress indicator** — every output starts with:
-
-```
-/fix ════════════════════════════════════════════════════════════
-
-  ▸ Phase 1  Gather Evidence       ~3 min
-  ○ Phase 2  Test Hypothesis       ~3 min
-  ○ Phase 3  Fix                   ~5 min
-  ○ Phase 4  Verify & Report       ~2 min
-
-════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as phases progress.
-Completed phases show a status note (e.g., `✓ hypothesis confirmed`, `✓ 1 file changed`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

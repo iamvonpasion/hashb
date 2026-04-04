@@ -1,10 +1,10 @@
 ---
+name: spec
 description: >
   Product specification — problem discovery, requirements definition, acceptance criteria.
-  Unified skill for product-side planning before engineering.
-    /spec           — auto-detect mode (discovery + define, or define only)
-    /spec discover  — force discovery mode (problem space exploration)
-    /spec define    — force requirements mode (problem already understood)
+  Use when defining what to build: new features, user stories, requirements, acceptance criteria.
+  Modes: /spec (auto-detect), /spec discover (problem exploration), /spec define (requirements).
+argument-hint: "[topic or \"discover\"]"
 ---
 
 # Spec
@@ -30,27 +30,7 @@ One skill, adaptive phases. Stream output continuously — gate only at decision
 
 ## Presentation Rules
 
-1. **Stream by default** — output all phases continuously with clear section headers. Do NOT stop between phases unless a decision gate is reached. The user can interrupt at any point.
-2. **Summary table before detail** — every phase opens with a table, expands only where needed.
-3. **Tables over prose** — use tables for comparisons, options, checklists. Prose for context only.
-4. **Discussion chunking** — when a response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time. Use judgment: chunk when it feels like a wall of text.
-5. **Progress indicator** — every output starts with:
-
-```
-/spec ═══════════════════════════════════════════════════════════
-
-  ▸ Phase 0  Scope                ~2 min
-  ○ Phase 1  Discovery            ~5 min
-  ○ Phase 2  Define               ~8 min
-  ○ Phase 3  Acceptance Criteria  ~5 min
-  ○ Phase 4  Summary              ~2 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
-Completed phases show a status note on the right (e.g., `✓ done`, `✓ 3 stories`).
-Skipped phases omit the time estimate.
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

@@ -1,5 +1,9 @@
 ---
-description: QA testing — browse like a real user, document bugs, report only. Never fixes.
+name: qa
+description: >
+  QA testing — browse like a real user, document bugs, report only. Never fixes code.
+  Use when testing a feature or verifying a fix. Tests happy paths, error cases, edge cases, and verifies requirements. Reports bugs but never edits source code.
+argument-hint: "[URL or feature]"
 ---
 
 # QA Report Only: Test & Document
@@ -11,24 +15,7 @@ When bugs are found, use `/fix` to address them, then re-run `/qa` to verify.
 
 ---
 
-## Presentation Rules
-
-1. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-2. **Progress indicator** — every output starts with:
-
-```
-/qa ═════════════════════════════════════════════════════════════
-
-  ▸ Phase 1  Orient                ~2 min
-  ○ Phase 2  Explore & Document    ~10 min
-  ○ Phase 2.5 Requirement Verify   ~5 min
-  ○ Phase 3  Score & Report        ~3 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as phases progress.
-Completed phases show a status note (e.g., `✓ 8 pages`, `✓ 4 issues`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

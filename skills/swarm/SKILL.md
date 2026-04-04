@@ -1,5 +1,10 @@
 ---
-description: Parallel work decomposition — plan, coordinate, merge streams.
+name: swarm
+description: >
+  Parallel work decomposition — plan, coordinate, merge streams.
+  Use when a task is too large for one stream. Decomposes into parallel streams with worktree isolation, coordinates review, and merges results.
+  Modes: /swarm plan, /swarm review, /swarm merge.
+argument-hint: "[\"plan\" or \"review\" or \"merge\"]"
 ---
 
 # Swarm — Parallel Work Streams
@@ -12,30 +17,7 @@ sequentially. Multiple agents take one each. The manifest works either way.
 
 ---
 
-## Presentation Rules
-
-1. **Wizard flow** — present one phase at a time. Never dump everything at once.
-2. **Summary table before detail** — every phase opens with a table, expands only where needed.
-3. **Tables over prose** — use tables for comparisons, options, checklists. Prose for context only.
-4. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-5. **Progress indicator** — every output starts with:
-
-```
-/swarm ══════════════════════════════════════════════════════════
-
-  ▸ Plan       Decompose & manifest   ~5 min
-  ○ Implement  Stream execution       ~varies
-  ○ Review     Per-stream /review     ~5 min/stream
-  ○ Merge      Sequential merge       ~3 min/stream
-  ○ Integrate  /review full diff      ~5 min
-  ○ Ship       Hand off to /ship      ~1 min
-
-══════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
-Completed phases show a status note on the right (e.g., `✓ 3 streams`, `✓ all APPROVED`).
-Skipped phases omit the time estimate.
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

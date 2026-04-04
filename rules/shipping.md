@@ -2,7 +2,7 @@
 description: >
   Self-shipping rule — commit and push changes to this plugin repo after every
   modification session. Ensures no work is left uncommitted or unpushed.
-globs:
+paths:
   - skills/**/*
   - rules/**/*
   - .claude-plugin/plugin.json

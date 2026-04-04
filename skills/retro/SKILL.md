@@ -1,5 +1,8 @@
 ---
-description: Post-ship retrospective — what worked, what didn't, root causes, action items.
+name: retro
+description: >
+  Post-ship retrospective — what worked, what didn't, root causes, action items.
+  Use after shipping to reflect on the development process. Analyzes planning accuracy, quality gates, surprises, and persists top learnings as memories.
 ---
 
 # Retrospective
@@ -11,26 +14,7 @@ Run after `/ship` lands. Capture what happened so the next cycle is better.
 
 ---
 
-## Presentation Rules
-
-1. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-2. **Progress indicator** — every output starts with:
-
-```
-/retro ══════════════════════════════════════════════════════════
-
-  ▸ Phase 1    Gather the Record    ~3 min
-  ○ Phase 2    Analyze              ~5 min
-  ○ Phase 3    Action Items         ~3 min
-  ○ Phase 4    Report               ~2 min
-  ○ Phase 4.5  Persist Learnings    ~2 min
-  ○ Phase 5    Apply (optional)     ~3 min
-
-══════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
-Completed phases show a status note (e.g., `✓ 5 findings`, `✓ 3 actions`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

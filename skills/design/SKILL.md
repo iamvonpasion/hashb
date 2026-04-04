@@ -1,9 +1,10 @@
 ---
+name: design
 description: >
   UX/UI design — wireframes, component mapping, interaction design, accessibility.
-  Bridge between /spec and /eng for features that involve user interfaces.
-    /design         — full design pass (from spec requirements)
-    /design review  — review existing UI against spec or heuristics
+  Use when a feature needs UI: wireframes, user flows, component structure, responsive breakpoints.
+  Modes: /design (full pass), /design review (review existing UI).
+argument-hint: "[feature or \"review\"]"
 ---
 
 # Design
@@ -34,26 +35,7 @@ Stream output continuously — gate only at decision points.
 
 ## Presentation Rules
 
-1. **Stream by default** — output all phases continuously with clear section headers. Do NOT stop between phases unless a decision gate is reached. The user can interrupt at any point.
-2. **Summary table before detail** — every phase opens with a table.
-3. **ASCII wireframes** — agent cannot produce visual mockups. Use ASCII layouts.
-4. **Discussion chunking** — when a response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time. Use judgment: chunk when it feels like a wall of text.
-5. **Progress indicator** — every output starts with:
-
-```
-/design ═════════════════════════════════════════════════════════
-
-  ▸ Phase 0  Inventory                  ~3 min
-  ○ Phase 1  Layout & Wireframes        ~5 min/screen
-  ○ Phase 2  Interaction Design         ~8 min
-  ○ Phase 3  Accessibility & Responsive ~5 min
-  ○ Phase 4  Summary                    ~2 min
-
-═════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending), `—` (skipped) as phases progress.
-Completed phases show a status note on the right (e.g., `✓ done`, `✓ 4 screens`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 

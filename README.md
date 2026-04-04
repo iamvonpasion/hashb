@@ -7,15 +7,7 @@ Dev workflow toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude
 
 **As a plugin (recommended):**
 ```bash
-/plugin marketplace add hashb/hashb-workflow
-/plugin install hashb
-```
-
-**Manual (copy into your project):**
-```bash
-git clone https://github.com/hashb/hashb-workflow
-cp -r hashb-workflow/skills your-project/.claude/skills
-cp -r hashb-workflow/rules your-project/.claude/rules
+/install-plugin https://github.com/iamvonpasion/hashb
 ```
 
 ## Skills

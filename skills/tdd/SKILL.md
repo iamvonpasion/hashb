@@ -1,9 +1,10 @@
 ---
+name: tdd
 description: >
   Test-driven implementation — execute the TDD plan from /eng.
-  Requires /eng output as input. RED → GREEN → REFACTOR with checkpoint gates.
-    /tdd            — execute TDD plan from /eng
-    /tdd continue   — resume from last checkpoint
+  Use after /eng produces a TDD execution plan. Writes failing tests first (RED), implements code to pass (GREEN), then refactors. Requires /eng output as input.
+  Modes: /tdd (start), /tdd continue (resume from last checkpoint).
+argument-hint: "[\"continue\" to resume]"
 ---
 
 # TDD
@@ -27,24 +28,7 @@ Execute the implementation plan from `/eng` using strict test-driven development
 
 ## Presentation Rules
 
-1. **Wizard flow** — one test cycle at a time. Never implement multiple tests at once.
-2. **Discussion chunking** — when a follow-up response would be too dense to digest in one shot, present a numbered big-picture overview first, then discuss each point one at a time, waiting for user input between points. Use judgment: chunk whenever the response feels like a wall of text, not at a fixed threshold.
-3. **Progress indicator** — every output starts with:
-
-```
-/tdd ════════════════════════════════════════════════════════════
-
-  ▸ Phase 0  Validate Input         ~1 min
-  ○ Phase 1  Branch Setup           ~1 min
-  ○ Phase 2  RED → GREEN → REFACTOR ~varies
-  ○ Phase 3  Suite Check            ~2 min
-  ○ Phase 4  Handoff                ~1 min
-
-════════════════════════════════════════════════════════════════
-```
-
-Update `▸` (current), `✓` (done), `○` (pending) as phases progress.
-Completed phases show a status note (e.g., `✓ 3 tests planned`, `✓ cycle 2/3 GREEN`).
+See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
 
 ---
 
