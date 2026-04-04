@@ -192,6 +192,10 @@ hashb/
 
 ---
 
+## Author
+
+**Von Pasion** — [vonpasion.com](https://vonpasion.com) · [LinkedIn](https://www.linkedin.com/in/von-pasion/)
+
 ## License
 
 MIT
