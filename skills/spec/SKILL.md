@@ -115,6 +115,7 @@ If mode wasn't specified by the user, determine it:
 | User has a ticket/brief with acceptance criteria draft | Define |
 | User says "break this down", "too big", "multiple sessions" | Decompose (`/spec decompose`) |
 | Large feature with existing spec output | Decompose |
+| Goal spans multiple areas/modules, would need 8+ files changed | Decompose (recommend proactively) |
 | Ambiguous | Ask the user |
 
 ### Scope Card
