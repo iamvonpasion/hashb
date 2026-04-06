@@ -10,6 +10,7 @@ AI-assisted development toolkit.
 
 | Skill | Purpose | Modifies code? |
 |-------|---------|----------------|
+| `quick` | Quick planning — single-response plans, no ceremony, auto-detects intent or explicit mode | No |
 | `spec` | Product specification — problem discovery, requirements definition, acceptance criteria | No |
 | `design` | UX/UI design — wireframes, component mapping, interaction design, accessibility | No |
 | `research` | Pre-planning research — libraries, APIs, ecosystem, stack choices | No |
@@ -63,6 +64,7 @@ Skills use sensible defaults when other fields are missing.
 ```markdown
 ## Skill Routing
 When user intent matches a skill, invoke it instead of acting freestyle:
+- Quick plan, "just plan this", fast, lightweight, small task → `/hashb:quick`
 - Requirements, specs, "what should we build" → `/hashb:spec`
 - UI design, wireframes, components → `/hashb:design`
 - Library/API evaluation, tech research → `/hashb:research`
