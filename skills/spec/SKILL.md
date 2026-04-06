@@ -3,8 +3,9 @@ name: spec
 description: >
   Product specification — problem discovery, requirements definition, acceptance criteria.
   Use when defining what to build: new features, user stories, requirements, acceptance criteria.
-  Modes: /spec (auto-detect), /spec discover (problem exploration), /spec define (requirements).
-argument-hint: "[topic or \"discover\"]"
+  Modes: /spec (auto-detect), /spec discover (problem exploration), /spec define (requirements),
+  /spec decompose (break large goal into sequenced tasks in TODOS.md).
+argument-hint: "[topic or \"discover\" or \"decompose\"]"
 ---
 
 # Spec
@@ -25,6 +26,8 @@ One skill, adaptive phases. Stream output continuously — gate only at decision
 | Problem understood, need structured requirements | `/spec` or `/spec define` |
 | Existing PRD needs tightening | `/spec define` |
 | Translating stakeholder request into actionable spec | `/spec` |
+| Large feature, needs breakdown into manageable tasks | `/spec decompose` |
+| "This is too big for one session" | `/spec decompose` |
 
 ---
 
@@ -43,6 +46,7 @@ Assess complexity at the start and adjust depth:
 | **Small** | Single story, clear problem, ≤3 requirements | Combine all phases into one response. 1 gate max (final confirmation) |
 | **Medium** | 3-8 stories, known domain, moderate scope | Stream phases continuously. 2 gates (after scope, after requirements+AC) |
 | **Large** | Unclear problem, many stakeholders, 8+ stories, new domain | Full flow with discovery. 2 gates + discovery confirmation |
+| **Decompose** | Large feature, multi-session, needs task breakdown | Phase 0 → Phase D → Phase 4. 2 gates (scope, task manifest) |
 
 ---
 
@@ -52,17 +56,23 @@ Assess complexity at the start and adjust depth:
 |-------|------|-------------|-------------|
 | 0 | Scope | Always | Identify the problem area, determine mode, list what needs answering |
 | 1 | Discovery | If problem space unclear | Explore problem, users, pain points, constraints, opportunities |
-| 2 | Define | Always | Structure requirements: user stories, functional/non-functional requirements |
-| 3 | Acceptance Criteria | Always | Testable criteria for every requirement, edge cases, out-of-scope |
-| 4 | Summary | Always | Combined output: spec document, handoff for downstream skills |
+| 2 | Define | Unless decompose mode | Structure requirements: user stories, functional/non-functional requirements |
+| 3 | Acceptance Criteria | Unless decompose mode | Testable criteria for every requirement, edge cases, out-of-scope |
+| D | Decompose | If decompose mode | Break goal into sequenced tasks, write to TODOS.md |
+| 4 | Summary | Always | Combined output: spec document or task manifest, handoff for downstream skills |
 
 > Phase 1 is **conditional** — skipped automatically in `/spec define` mode
 > or when Phase 0 determines the problem is already well-understood.
+>
+> Phase D **replaces** Phases 2-3 in decompose mode. It produces tasks, not
+> stories/requirements. Each task includes its own mini-spec (goal + AC).
 >
 > **Routing after Phase 0:**
 > - Problem space unclear? → **Proceed to Phase 1**
 > - Problem understood, need requirements? → **Skip to Phase 2**
 > - `/spec define` mode? → **Skip to Phase 2**
+> - `/spec decompose` mode? → **Skip to Phase D**
+> - Large feature, needs breakdown? → **Skip to Phase D**
 
 ---
 
@@ -103,6 +113,8 @@ If mode wasn't specified by the user, determine it:
 | User says "I want to understand..." or "we need to figure out..." | Discovery |
 | User provides clear requirements but unstructured | Define (`/spec define`) |
 | User has a ticket/brief with acceptance criteria draft | Define |
+| User says "break this down", "too big", "multiple sessions" | Decompose (`/spec decompose`) |
+| Large feature with existing spec output | Decompose |
 | Ambiguous | Ask the user |
 
 ### Scope Card
@@ -130,7 +142,7 @@ SPEC SCOPE ───────────────────────
 **After user confirms, state the route explicitly:**
 
 ```
-ROUTE: {Problem unclear → Phase 1 (Discovery) | Problem understood → Skip to Phase 2 (Define)}
+ROUTE: {Problem unclear → Phase 1 (Discovery) | Problem understood → Skip to Phase 2 (Define) | Large goal, needs breakdown → Skip to Phase D (Decompose)}
 ```
 
 ---
@@ -317,6 +329,159 @@ Only include scenarios relevant to this spec.
 
 ---
 
+## Phase D — Decompose (conditional)
+
+**Runs if:** `/spec decompose` mode, or Phase 0 determined the goal is too large
+for a single `/eng` cycle.
+
+**Skip if:** `/spec discover` or `/spec define` mode.
+
+**This is the ONE /spec mode that writes files** (TODOS.md only), parallel to
+how `/ship` writes CHANGELOG.
+
+### Re-entry Detection
+
+Before decomposing, check for existing decomposed tasks:
+
+```bash
+ls TODOS.md 2>/dev/null
+```
+
+If TODOS.md exists, read it and look for `### Feature:` sections.
+
+**If the requested feature already has a section:**
+
+```
+DECOMPOSE RE-ENTRY ──────────────────────────────────────────────
+
+  Feature         {name}
+  Tasks           {N total}  ({done} done, {remaining} remaining)
+
+  PROGRESS
+  ─────────────────────────────────────────────────
+  ✓ #1  {description}
+  ✓ #2  {description}
+  ▸ #3  {description}  ← NEXT (dependencies met)
+  ○ #4  {description}  (depends: #3)
+
+  ➤ NEXT: /eng on task #3, or /spec decompose to revise plan
+
+─────────────────────────────────────────────────────────────────
+```
+
+If all tasks are `[x]`: output "Feature complete. Run `/retro`?"
+
+If a suggested next task has unmet dependencies, warn and suggest the
+blocking task instead.
+
+### Decomposition
+
+Break the goal into **3-8 sequenced tasks**, each scoped to ≈ one `/eng` → `/tdd` cycle.
+
+**Sizing rules:**
+- < 3 tasks → "This is small enough for a single `/eng` — skip decompose"
+- 3-8 tasks → proceed normally
+- \> 8 tasks → group into 2-3 milestones, each with 3-5 tasks
+
+**Input sources** (in priority order):
+1. A `/spec` output from earlier in the conversation — extract stories and decompose
+2. A user description of the feature
+3. An existing spec document referenced by path
+
+For each task, produce:
+
+| Field | Content |
+|-------|---------|
+| Priority | P1 (blocking/critical), P2 (important), P3 (nice-to-have) |
+| Effort | S (< half day), M (half day–2 days), L (2+ days) |
+| ID | Sequential `#N`, continuing from highest existing ID in TODOS.md |
+| Description | What to build (1 sentence, imperative) |
+| Dependencies | `(depends: #N, #M)` or `(depends: none)` — immediate predecessors only |
+| Goal | 1 sentence — what this task achieves |
+| AC | 2-5 testable acceptance criteria |
+
+### Decompose Output
+
+Present the task manifest for review before writing:
+
+```
+DECOMPOSE ───────────────────────────────────────────────────────
+
+  Feature         {name}
+  Tasks           {N}
+  Milestones      {N — or "none, single sequence"}
+
+  TASK MANIFEST
+  ─────────────────────────────────────────────────
+
+  #1  P1 [M] {description} (depends: none)
+      Goal: {1 sentence}
+      AC:
+        - {criterion}
+        - {criterion}
+
+  #2  P1 [S] {description} (depends: none)
+      Goal: {1 sentence}
+      AC:
+        - {criterion}
+        - {criterion}
+
+  #3  P1 [L] {description} (depends: #1, #2)
+      Goal: {1 sentence}
+      AC:
+        - {criterion}
+        - {criterion}
+        - {criterion}
+
+  SEQUENCE
+  ─────────────────────────────────────────────────
+  #1 ──→ #3 ──→ #4
+  #2 ──┘
+
+─────────────────────────────────────────────────────────────────
+```
+
+> **GATE D.** User approves the task manifest before writing.
+
+### /swarm Recommendation
+
+After presenting the manifest, check for parallelism:
+
+If ≥ 3 tasks have no mutual dependencies, output:
+
+```
+💡 Tasks #N, #M, #K are independent — consider /swarm for parallel execution.
+```
+
+### Write to TODOS.md
+
+After user approval, write tasks under a feature heading:
+
+```markdown
+### Feature: {name}
+
+- [ ] P1 [M] #1 {description} (depends: none)
+  - Goal: {1 sentence}
+  - AC:
+    - [ ] {criterion}
+    - [ ] {criterion}
+
+- [ ] P1 [S] #2 {description} (depends: none)
+  - Goal: {1 sentence}
+  - AC:
+    - [ ] {criterion}
+    - [ ] {criterion}
+```
+
+**Write rules:**
+- If TODOS.md doesn't exist, create it with a standard header
+- If TODOS.md exists, append the new feature section below existing content
+- Never move or reformat existing items
+- Start `#N` numbering after the highest existing ID
+- If a task overlaps with an existing TODO, flag: "Task #N overlaps with existing: {description}. Skip? Replace?"
+
+---
+
 ## Phase 4 — Summary
 
 > **GATE 2.** Present the full spec for user approval.
@@ -356,6 +521,8 @@ Only include scenarios relevant to this spec.
 | Feature has UI/UX work | `/design` | Translate requirements into wireframes, interactions, accessibility |
 | Pure backend / API / infra | `/eng` | Technical planning + TDD |
 | Need library/API research | `/research` → `/eng` | Evaluate options before committing to architecture |
+| Decompose mode — tasks written | `/eng` on first task | Start working through the task sequence |
+| Decompose mode — parallelizable | `/swarm` | Independent tasks benefit from parallel execution |
 
 **Autonomous mode:** If running inside a recipe chain (e.g., Feature recipe), auto-proceed
 to `/design` if any user story involves UI, otherwise `/eng`. Pass the Handoff Summary
@@ -384,7 +551,7 @@ when they need detail.
 
 | Rule | Why |
 |------|-----|
-| Read-only | No code changes, no file creation. Spec is a conversation artifact |
+| Read-only (except decompose) | No code changes. Decompose mode writes to TODOS.md only — like how `/ship` writes CHANGELOG |
 | Stream by default | Output continuously. Gate only at decision points (scope, final approval) |
 | 2 gates default | Gate 1: scope confirmation. Gate 2: final spec approval. Add gates when a user decision is genuinely needed (ambiguous requirement, conflicting constraints). Don't gate for confirmation — gate for decisions |
 | Be opinionated | Recommend priorities. "Everything is P1" is not a spec |

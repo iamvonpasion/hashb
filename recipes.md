@@ -62,6 +62,7 @@ cd .worktrees/<name>
 **Tips:**
 - Need tech research? Run `/research` before `/eng`.
 - Too big for one stream? Run `/swarm plan` to decompose into parallel streams.
+- Feature too big for one session? Run `/spec decompose` to break it into sequenced tasks in TODOS.md, then work through them with `/eng` → `/tdd` per task.
 - Problem space unclear? Start with `/spec discover` for deep discovery.
 - No UI work? Skip `/design` and go straight from `/spec` to `/eng`.
 

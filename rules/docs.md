@@ -23,6 +23,36 @@ paths:
 - Mark completed items with `[x]` and date: `- [x] (2024-01-15) Description`
 - Keep completed items for one release cycle, then remove
 
+### Extended format (from `/spec decompose`)
+
+Items produced by `/spec decompose` add optional fields to the base format:
+
+- **Task IDs:** `- [ ] P1 [M] #1 Description` — `#N` is a sequential ID for dependency tracking
+- **Dependencies:** `(depends: #1, #2)` or `(depends: none)` appended to the description
+- **Feature sections:** `### Feature: {name}` groups related tasks under a heading
+- **Mini-spec:** indented sub-list with goal and acceptance criteria
+
+```markdown
+### Feature: Auth System
+
+- [ ] P1 [M] #1 Auth middleware — JWT validation + refresh (depends: none)
+  - Goal: Request authentication layer that validates and refreshes JWTs
+  - AC:
+    - [ ] Valid JWT passes through to handler
+    - [ ] Expired JWT triggers refresh flow
+    - [ ] Invalid JWT returns 401
+
+- [ ] P1 [S] #2 User model + migrations (depends: none)
+  - Goal: User entity with email, role, password hash
+  - AC:
+    - [ ] User CRUD operations work
+    - [ ] Password is bcrypt-hashed, never stored plain
+```
+
+All extended fields are optional — existing TODOS.md items without `#N` IDs or
+`(depends:)` refs continue to work unchanged. Skills that read TODOS.md
+(`/fix`, `/eng`, `/ship`, `/audit`) should treat the extended fields as additive context.
+
 ## General Markdown
 
 - Use ATX headings (`#`), not Setext (underline)

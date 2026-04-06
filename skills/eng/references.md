@@ -34,7 +34,7 @@
 |-------|----------|--------|
 | Minimum viable | Smallest change that achieves the goal? | {answer} |
 | Complexity smell | >8 files or >2 new classes? | {yes/no — challenge if yes} |
-| TODOS.md cross-ref | Block, unlock, or duplicate existing TODOs? | {answer} |
+| TODOS.md cross-ref | Block, unlock, or duplicate existing TODOs? Check for `#N` task IDs and `(depends:)` from `/spec decompose` | {answer} |
 
 If complexity smell triggers, recommend scope reduction.
 

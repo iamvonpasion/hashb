@@ -268,6 +268,7 @@ When adding the Skill Routing section to CLAUDE.md, use this template:
 ## Skill Routing
 When user intent matches a skill, invoke it instead of acting freestyle:
 - Requirements, specs, "what should we build" → `/hashb:spec`
+- Break down large feature, task breakdown, "too big for one session" → `/hashb:spec decompose`
 - UI design, wireframes, components → `/hashb:design`
 - Library/API evaluation, tech research → `/hashb:research`
 - Architecture, implementation plan, scope → `/hashb:eng`

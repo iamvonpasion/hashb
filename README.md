@@ -8,7 +8,7 @@
 
 **Dev workflow toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 
-14 skills that turn Claude into a structured development partner — from
+16 skills that turn Claude into a structured development partner — from
 spec to ship, with gates, reviews, and TDD enforcement at every step.
 
 Skills are generic. They work for any stack, any project. Domain context
@@ -58,7 +58,8 @@ Every skill enforces discipline that AI tends to skip:
 
 | Skill | What it does | Writes code? |
 |-------|-------------|:------------:|
-| `spec` | Product specification — problem discovery, requirements, acceptance criteria | |
+| `spec` | Product specification — discovery, requirements, acceptance criteria, task decomposition | * |
+| `quick` | Quick planning — single-response, no ceremony, auto-detects intent | |
 | `design` | UX/UI design — wireframes, components, interactions, accessibility | |
 | `research` | Pre-planning research — libraries, APIs, ecosystem, stack choices | |
 | `eng` | Engineering — scope, architecture decisions, implementation review, TDD plan | |
@@ -77,6 +78,8 @@ Every skill enforces discipline that AI tends to skip:
 
 ```
 "What should we build?"          → /hashb:spec
+"Break this into tasks"          → /hashb:spec decompose
+"Just plan this quickly"         → /hashb:quick
 "Design the UI"                  → /hashb:design
 "Evaluate libraries"             → /hashb:research
 "Plan the architecture"          → /hashb:eng arch
@@ -159,7 +162,8 @@ All fields optional. Skills use sensible defaults when fields are missing.
 
 ```
 hashb/
-├── skills/                    14 skills
+├── skills/                    16 skills
+│   ├── quick/                 Quick planning
 │   ├── spec/                  Product specification
 │   ├── design/                UX/UI design
 │   ├── research/              Pre-planning research
