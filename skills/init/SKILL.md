@@ -114,7 +114,7 @@ INIT ASSESSMENT ─────────────────────�
 | Area | Check | Status | Action |
 |------|-------|--------|--------|
 | CLAUDE.md | File exists | {yes / missing} | {skip / create} |
-| CLAUDE.md | Project Profile present | {complete / partial / missing} | {skip / add fields / create} |
+| CLAUDE.md | Project Profile present | {complete / partial ({N}/9) / missing} | {skip / add fields / create} |
 | CLAUDE.md | Under 200 lines | {yes / no ({N} lines)} | {skip / refactor: extract to rules/} |
 | CLAUDE.md | No inlined rule/skill content | {yes / no} | {skip / extract to files, replace with paths} |
 | Rules | `rules/` directory exists | {yes / missing} | {skip / create} |
@@ -243,13 +243,29 @@ cat package.json 2>/dev/null | head -50   # Node/JS/TS deps
 cat requirements.txt 2>/dev/null          # Python deps
 cat go.mod 2>/dev/null | head -20         # Go deps
 ls *.csproj 2>/dev/null                   # .NET
+
+# Platform detection
+ls android/ ios/ 2>/dev/null              # Native mobile
+cat package.json 2>/dev/null | grep -i "react-native\|expo"   # RN/Expo
+cat pubspec.yaml 2>/dev/null | head -10   # Flutter
+cat package.json 2>/dev/null | grep -i "electron\|tauri"      # Desktop
+cat package.json 2>/dev/null | grep -i "commander\|yargs\|oclif\|ink" # CLI
+ls src/app/ src/pages/ app/ pages/ templates/ 2>/dev/null     # Web (routes/pages)
+
+# Distribution detection
+cat package.json 2>/dev/null | grep -i "stripe\|paddle\|lemonsqueezy"  # SaaS billing
+ls service-worker* sw.js manifest.json 2>/dev/null  # PWA / offline-first
+ls Dockerfile docker-compose* 2>/dev/null           # Self-hosted candidate
+ls .github/workflows/*publish* 2>/dev/null          # npm/package publishing
+cat package.json 2>/dev/null | grep -i '"bin"'      # CLI distribution
 ```
 
 ### Per-Field Walkthrough
 
-Auto-detect where possible, then confirm with the user. Fields 2 (Architecture),
-3 (Tenancy), and 5 (Deploy) cannot be auto-detected and must always be asked.
-Field 6 (MCP Servers) requires Context7 — walk through installation if needed.
+Auto-detect where possible, then confirm with the user. Fields that cannot be
+reliably auto-detected (Architecture, Tenancy, Audience, Deploy) must always be
+asked. Field 9 (MCP Servers) requires Context7 — walk through installation if
+needed.
 
 See `references.md` for the full per-field walkthrough scripts and MCP server
 suggestion table.
@@ -412,7 +428,7 @@ Run a quick check to confirm the setup is correct.
 | Area | Check | Status |
 |------|-------|--------|
 | Profile | CLAUDE.md exists with Project Profile | {pass / fail} |
-| Profile | All Profile fields populated | {N}/6 |
+| Profile | All Profile fields populated | {N}/9 |
 | Profile | Context7 listed in MCP Servers | {pass / fail} |
 | Routing | Skill Routing section present | {pass / fail} |
 | Stray docs | No overlapping documents outside hashb structure | {pass / fail ({N} remaining)} |
@@ -450,7 +466,7 @@ Run a quick check to confirm the setup is correct.
 
   VERIFIED
   ─────────────────────────────────────────────────
-  Profile fields           {N}/6 populated
+  Profile fields           {N}/9 populated
   Rules structure          valid
   Business rule frontmatter valid
   Rule overrides           {N} created

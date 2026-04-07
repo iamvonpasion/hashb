@@ -45,6 +45,9 @@ See `recipes.md` for workflow chains (feature, bugfix, release, architecture).
 ```markdown
 ## Project Profile
 - Stack: [e.g., Next.js 15 (App Router), TypeScript, PostgreSQL]
+- Platform: [e.g., Web, Mobile (React Native), Desktop (Electron), CLI, API-only]
+- Distribution: [e.g., SaaS, self-hosted, offline-first, app store, npm package]
+- Audience: [e.g., B2B, B2C, internal tool, developer tool]
 - Architecture: [e.g., Modular monolith, microservices, monorepo]
 - Tenancy: [e.g., Single-tenant, multi-tenant (tenant_id scoping)]
 - Testing: [e.g., Vitest + Playwright, Jest + Cypress]

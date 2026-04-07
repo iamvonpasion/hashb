@@ -193,7 +193,78 @@ DETECTED STACK:
   Is this correct? Anything to add or change?
 ```
 
-**Field 2: Architecture** (cannot auto-detect — always ask)
+**Field 2: Platform** (auto-detect from codebase, confirm with user)
+
+```
+DETECTED PLATFORM:
+  {detection source} -> {detected platform}
+  Is this correct? Anything to add or change?
+```
+
+If no signals detected:
+
+```
+PLATFORM:
+  What kind of app is this?
+  Examples: Web, Mobile (iOS), Mobile (Android), Mobile (React Native),
+            Desktop (Electron), CLI, API-only, Library/SDK
+  Multiple platforms? List all (e.g., "Web + Mobile (React Native)")
+```
+
+Auto-detection signals:
+
+| Signal | Platform |
+|--------|----------|
+| `android/`, `ios/`, `*.swift`, `*.kt`, `*.java` (with Android imports) | Mobile (native) |
+| `react-native` or `expo` in package.json | Mobile (React Native) |
+| `pubspec.yaml` with Flutter | Mobile (Flutter) |
+| `.xcodeproj`, `Podfile` | Mobile (iOS) |
+| `electron` or `tauri` in package.json | Desktop |
+| `commander`, `yargs`, `oclif`, `ink`, `click`, `cobra`, `clap` in deps | CLI |
+| Web framework detected (Next.js, Express, Django, Rails, etc.) with routes/pages | Web |
+| API framework with no frontend/pages directory | API-only |
+| `"main"` field in package.json, no `"bin"`, no framework | Library/SDK |
+
+**Field 3: Distribution** (auto-detect where possible, confirm with user)
+
+```
+DETECTED DISTRIBUTION:
+  {detection source} -> {detected distribution model}
+  Is this correct? Anything to add or change?
+```
+
+If no signals detected:
+
+```
+DISTRIBUTION:
+  How will users get/access this?
+  Examples: SaaS (hosted), self-hosted, offline-first, app store,
+            npm/PyPI package, browser extension, internal deploy
+```
+
+Auto-detection signals:
+
+| Signal | Distribution |
+|--------|-------------|
+| Billing/subscription deps (Stripe, Paddle, etc.) | SaaS |
+| Service worker, offline manifest, IndexedDB usage | Offline-first / PWA |
+| Dockerfile + no billing deps, self-host docs | Self-hosted |
+| App store configs (Fastlane, app.json with expo) | App store |
+| `"bin"` in package.json, CLI framework | npm/PyPI package |
+| `manifest.json` with `"manifest_version"` | Browser extension |
+| No public deploy config, internal tool signals | Internal deploy |
+
+**Field 4: Audience** (cannot auto-detect — always ask)
+
+```
+AUDIENCE:
+  Who uses this?
+  Examples: B2B (businesses), B2C (consumers), internal tool,
+            developer tool, marketplace (multi-sided)
+  This helps skills tailor review checks and spec questions.
+```
+
+**Field 5: Architecture** (cannot auto-detect — always ask)
 
 ```
 ARCHITECTURE:
@@ -201,7 +272,7 @@ ARCHITECTURE:
   Examples: Modular monolith, microservices, monorepo, layered MVC
 ```
 
-**Field 3: Tenancy** (cannot auto-detect — always ask)
+**Field 6: Tenancy** (cannot auto-detect — always ask)
 
 ```
 TENANCY:
@@ -210,7 +281,7 @@ TENANCY:
   Examples: Single-tenant, multi-tenant (tenant_id scoping), multi-tenant (schema per tenant)
 ```
 
-**Field 4: Testing**
+**Field 7: Testing**
 
 ```
 DETECTED TESTING:
@@ -219,7 +290,7 @@ DETECTED TESTING:
   Is this correct?
 ```
 
-**Field 5: Deploy** (cannot auto-detect from source alone — always ask)
+**Field 8: Deploy** (cannot auto-detect from source alone — always ask)
 
 ```
 DEPLOY:
@@ -227,7 +298,7 @@ DEPLOY:
   Examples: Vercel, AWS ECS, Docker Compose, Kubernetes, Fly.io
 ```
 
-**Field 6: MCP Servers** (guided setup — Context7 required)
+**Field 9: MCP Servers** (guided setup — Context7 required)
 
 Context7 is required and always included. Walk the user through installation
 if not already configured, then suggest additional plugins based on stack.
