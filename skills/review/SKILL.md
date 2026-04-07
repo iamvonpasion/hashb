@@ -220,7 +220,7 @@ REVIEW SCORE
 
 | Condition | Verdict | Action |
 |-----------|---------|--------|
-| 0 blocking, confidence HIGH | **APPROVED** | Proceed to `/qa` or `/ship` |
+| 0 blocking, confidence HIGH | **APPROVED** | Proceed to `/qa` |
 | 0 blocking, confidence MEDIUM | **APPROVED WITH NOTES** | Proceed, address warnings |
 | Any blocking, confidence HIGH | **CHANGES REQUESTED** | Fix blockers, re-review |
 | Any blocking, confidence LOW | **ESCALATE** | Need human reviewer — agent unsure |
@@ -265,6 +265,11 @@ REVIEW SCORE
 | APPROVED WITH NOTES | `/qa` | Proceed with warnings noted |
 | CHANGES REQUESTED | Fix blockers → re-invoke `/review` | Max 2 cycles before escalating |
 | ESCALATE | Stop — present to user | Agent unsure, needs human judgment |
+
+**After fixing findings:** If WARNING or BLOCKING findings are fixed inline
+(same session), re-run a scoped review of just the fixes before proceeding —
+verify the fixes are correct and didn't introduce new issues. Output an updated
+verdict, then hand off to `/qa`. SUGGESTION fixes don't require re-review.
 
 **Autonomous mode:** If running inside a recipe chain:
 - APPROVED / APPROVED WITH NOTES → auto-proceed to `/qa`

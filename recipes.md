@@ -16,6 +16,8 @@ the skills to run in order, the gates between them, and what gets handed off.
 
 **TDD pattern:** `/eng` produces a test-first plan. `/tdd` executes it: writes failing tests first (RED), then code to pass them (GREEN), then refactors. Every checkpoint verifies the cycle. `/tdd` requires `/eng` output as input.
 
+**Ship-readiness pattern:** The default chain before shipping is `/review` → `/qa` → `/ship`. After `/review` returns APPROVED or APPROVED WITH NOTES, the next step is `/qa` — not `/ship`. If `/review` findings are fixed, re-run `/review` to confirm, then proceed to `/qa`. The user can override this (e.g., "skip QA, just ship") — respect explicit overrides.
+
 **Isolation pattern:** Feature work should use a git worktree or feature branch
 to isolate changes from the base branch. For recipes that use `/swarm`, worktrees
 are created automatically. For single-stream work, create a worktree before

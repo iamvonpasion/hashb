@@ -39,6 +39,23 @@ echo "BRANCH: $BRANCH  BASE: $BASE"
 
 If on the base branch: abort. "Ship from a feature branch."
 
+**QA check:** Look for evidence that `/qa` was run this session (QA report in
+conversation context, QA verdict, or explicit user skip). If no evidence found,
+warn before proceeding:
+
+```
+⚠ NO QA DETECTED
+─────────────────────────────────────────────────
+No /qa report found in this session. The ship-readiness
+pattern expects: /review → /qa → /ship.
+
+Proceeding — but consider running /qa first.
+─────────────────────────────────────────────────
+```
+
+If the user explicitly skipped QA (e.g., "skip QA", "just ship"), respect
+the override and proceed without warning.
+
 ```bash
 git status
 git diff $BASE...HEAD --stat
