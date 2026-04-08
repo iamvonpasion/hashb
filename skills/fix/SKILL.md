@@ -42,6 +42,17 @@ Was this working before? If so, the root cause is in the diff.
 **Check known issues:** Scan `TODOS.md` and git log for prior fixes in
 the same area. Recurring bugs in the same files = architectural smell.
 
+**Graph-Aware Tracing (if code-review-graph MCP is available):**
+If the consumer's Project Profile lists `code-review-graph`, query it to
+accelerate evidence gathering:
+- Trace callers and dependents of the symptomatic function to find the
+  full call chain from entry point to failure site
+- Identify which tests cover the affected code paths — if they're passing,
+  the bug may be in an untested path
+- Map the blast radius of the suspected root cause before fixing
+
+If code-review-graph is not available, trace manually via grep and file reads.
+
 **Reproduce:** Can you trigger it deterministically? If not, gather more
 evidence before proceeding.
 

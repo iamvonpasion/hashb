@@ -64,6 +64,22 @@ git log $BASE..HEAD --oneline
 git diff $BASE...HEAD --name-only
 ```
 
+### Graph-Aware Context (if code-review-graph MCP is available)
+
+If the consumer's Project Profile lists `code-review-graph` as an MCP server,
+query it to sharpen the review scope:
+
+1. **Blast radius** — for each changed function/class, query the graph for
+   callers, dependents, and affected tests. Review these alongside the diff —
+   they're the code most likely to break from this change.
+2. **Minimal review set** — use the graph's structural map instead of reading
+   entire files. This reduces token usage while improving review quality.
+3. **Dependency direction** — the graph can verify that dependency flow matches
+   architecture (2A checks) without manual import tracing.
+
+If code-review-graph is not available, fall back to standard file reads.
+Don't block the review on graph availability.
+
 **Scope rule:** Review ONLY the diff. Don't review pre-existing code unless
 the diff makes it worse or introduces a dependency on it.
 

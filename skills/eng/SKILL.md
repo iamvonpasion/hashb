@@ -144,6 +144,19 @@ grep -r "TODO\|FIXME\|HACK" -l --exclude-dir={node_modules,vendor,.git,dist,buil
 
 Read if they exist: `CLAUDE.md`, `TODOS.md`, `docs/designs/`.
 
+### Graph-Aware Scoping (if code-review-graph MCP is available)
+
+If the consumer's Project Profile lists `code-review-graph`, query it to
+inform the implementation review:
+- **Blast radius** — for files being modified, identify all callers,
+  dependents, and tests that will be affected by the change
+- **Test coverage map** — feed into Phase 4 (TDD Plan) to identify which
+  existing tests cover the affected code and where gaps exist
+- **Dependency graph** — verify that the planned changes respect module
+  boundaries and dependency direction (feeds Phase 3, section 3B)
+
+If code-review-graph is not available, derive these from manual code reading.
+
 ### Verify with Context7
 
 When the engineering plan involves libraries, frameworks, or APIs, query Context7

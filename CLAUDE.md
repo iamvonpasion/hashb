@@ -53,10 +53,13 @@ See `recipes.md` for workflow chains (feature, bugfix, release, architecture, ex
 - Tenancy: [e.g., Single-tenant, multi-tenant (tenant_id scoping)]
 - Testing: [e.g., Vitest + Playwright, Jest + Cypress]
 - Deploy: [e.g., Vercel, AWS ECS, Docker Compose]
-- MCP Servers: Context7 (library docs) [+ optional: internal-wiki (company KB)]
+- MCP Servers: Context7 (library docs) [+ optional: code-review-graph (structural code intelligence), internal-wiki (company KB)]
 ```
 
 Fields are optional except MCP Servers, which must include Context7 (live library docs).
+When available, code-review-graph provides structural code intelligence (blast-radius
+analysis, dependency tracing, affected test detection) that skills like `/review`,
+`/fix`, and `/eng` use for precise context gathering instead of broad file reads.
 Skills use sensible defaults when other fields are missing.
 
 ## Skill Routing
