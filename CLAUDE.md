@@ -10,8 +10,9 @@ AI-assisted development toolkit.
 
 | Skill | Purpose | Modifies code? |
 |-------|---------|----------------|
+| `explore` | Unstructured exploration — think through ideas, investigate codebase, compare approaches before committing to a plan | No |
 | `quick` | Quick planning — single-response plans, no ceremony, auto-detects intent or explicit mode | No |
-| `spec` | Product specification — problem discovery, requirements, acceptance criteria, task decomposition | No* |
+| `spec` | Product specification — problem discovery, requirements, acceptance criteria, task decomposition, persistent spec registry with delta specs | No* |
 | `design` | UX/UI design — wireframes, component mapping, interaction design, accessibility | No |
 | `research` | Pre-planning research — libraries, APIs, ecosystem, stack choices | No |
 | `eng` | Engineering — scope, architecture decisions (if needed), implementation review, TDD | No |
@@ -20,13 +21,13 @@ AI-assisted development toolkit.
 | `fix` | Systematic debugging with RCA | Yes |
 | `qa` | QA testing — report only, never fixes | No |
 | `retro` | Post-ship retrospective — what worked, what didn't, action items, memory persistence | No |
-| `ship` | Ship workflow — test, review, version, changelog, PR | Yes |
+| `ship` | Ship workflow — test, review, version, changelog, delta spec merge, artifact archival, PR | Yes |
 | `swarm` | Parallel work decomposition — plan, review, coordinate, merge streams | Yes |
 | `docs` | Document hygiene — find stale, obsolete, duplicate, scattered docs; sync, consolidate, update, remove | Yes |
 | `audit` | Compliance audit — scan entire repo against hashb standards, scored report | No |
 | `init` | Bootstrap or update a repo for hashb compliance — Project Profile, rules, scaffolds | Yes |
 
-See `recipes.md` for workflow chains (feature, bugfix, release, architecture).
+See `recipes.md` for workflow chains (feature, bugfix, release, architecture, exploration).
 
 ## Rules
 
@@ -67,6 +68,7 @@ Skills use sensible defaults when other fields are missing.
 ```markdown
 ## Skill Routing
 When user intent matches a skill, invoke it instead of acting freestyle:
+- Explore, "not sure yet", "let me think", investigate, understand codebase → `/hashb:explore`
 - Quick plan, "just plan this", fast, lightweight, small task → `/hashb:quick`
 - Requirements, specs, "what should we build" → `/hashb:spec`
 - Break down large feature, task breakdown, "too big for one session" → `/hashb:spec decompose`

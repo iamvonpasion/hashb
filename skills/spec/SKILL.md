@@ -89,6 +89,23 @@ what's feasible.
 Check `.retro/` for retro reports mentioning the affected area.
 If recurring user-facing issues exist, flag them as known context in Phase 0.
 
+### Scan Spec Registry
+
+Check for an existing persistent spec registry:
+
+```bash
+# Check for spec registry and existing capability specs
+ls specs/ specs/**/*.md 2>/dev/null
+```
+
+If `specs/` exists, read capability specs relevant to the topic. These are the
+source of truth for what the system currently does. If the user is modifying
+an existing capability, you'll produce **delta specs** (see Phase 4) instead of
+full specs.
+
+If `specs/` doesn't exist, that's fine — Phase 4 will create it if the user
+approves.
+
 ### Gather Context
 
 ```bash
@@ -495,6 +512,7 @@ After user approval, write tasks under a feature heading:
   Problem area       {name}
   Mode               {discover + define | define only}
   Problem statement  {one-liner from Phase 1D}
+  Spec type          {new capability | delta (modifying existing)}
 
   DELIVERABLES
   ─────────────────────────────────────────────────
@@ -514,6 +532,94 @@ After user approval, write tasks under a feature heading:
 
 ─────────────────────────────────────────────────────────────────
 ```
+
+### Spec Registry — Persist to `specs/`
+
+After user approves the spec, write it to the persistent spec registry.
+This keeps a living record of what the system does, organized by capability.
+
+**Directory structure:**
+
+```
+specs/
+  {capability-name}.md     # One file per capability (kebab-case)
+```
+
+**Capability detection:** Derive the capability name from the problem area.
+Use kebab-case (e.g., `user-notifications`, `auth-flow`, `payment-processing`).
+
+#### New Capability (no existing spec in `specs/`)
+
+Write the full spec as a capability spec:
+
+```markdown
+# {Capability Name}
+
+> Last updated by /spec on {YYYY-MM-DD}
+
+## Requirements
+
+- **FR-1:** {requirement} (MUST)
+  - GIVEN {precondition} WHEN {action} THEN {outcome}
+- **FR-2:** {requirement} (SHOULD)
+  - GIVEN {precondition} WHEN {action} THEN {outcome}
+
+## Non-Functional
+
+- {category}: {requirement} — {target}
+
+## Constraints
+
+- {constraint}
+
+## Out of Scope
+
+- {item} — {reason}
+```
+
+#### Delta Spec (existing spec found in `specs/`)
+
+When modifying an existing capability, produce a delta spec showing only
+what changed. This makes reviews clearer and prevents merge conflicts.
+
+```markdown
+# Delta: {Capability Name}
+
+> Change: {one-line summary of what's changing}
+> Date: {YYYY-MM-DD}
+> Modifies: specs/{capability-name}.md
+
+## ADDED
+
+- **FR-N:** {new requirement} (MUST/SHOULD)
+  - GIVEN {precondition} WHEN {action} THEN {outcome}
+
+## MODIFIED
+
+- **FR-M:** {changed requirement} (MUST/SHOULD)
+  - Was: {previous behavior}
+  - Now: {new behavior}
+  - Reason: {why this changed}
+  - GIVEN {precondition} WHEN {action} THEN {outcome}
+
+## REMOVED
+
+- **FR-K:** {removed requirement}
+  - Reason: {why this is being removed}
+```
+
+**Delta rules:**
+- Only include sections that have changes (omit empty ADDED/MODIFIED/REMOVED)
+- Every MODIFIED entry must include "Was/Now/Reason" for reviewability
+- Every REMOVED entry must include a reason
+- Use RFC 2119 keywords (MUST, SHOULD, MAY) for requirement strength
+
+**Write rules:**
+- New capabilities: write directly to `specs/{capability-name}.md`
+- Delta specs: write to `specs/deltas/{capability-name}-{date}.md`
+- Delta specs are merged into main specs by `/ship` during archival
+- If `specs/` doesn't exist, create it (and `specs/deltas/` if producing a delta)
+- Ask user before writing: "Write spec to `specs/{file}`?"
 
 ### Next Step
 
