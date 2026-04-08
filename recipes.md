@@ -43,6 +43,10 @@ cd .worktrees/<name>
 /spec → /design (if UI) → /eng → /tdd → /review → /qa → /fix loop → /ship → /retro
 ```
 
+> **Unclear requirements?** Start with `/explore` before `/spec`. Explore produces
+> no artifacts — it's collaborative thinking. Transition to `/spec` when the problem
+> is clear enough to formalize.
+
 | Phase | Skill | What happens | Gate |
 |-------|-------|-------------|------|
 | 0 | `/spec` | Discover problem, define requirements, acceptance criteria. Streams continuously, 2 gates (scope, final) | User approves spec |
@@ -62,11 +66,13 @@ cd .worktrees/<name>
 ```
 
 **Tips:**
+- Requirements unclear? Run `/explore` first to think through the problem space.
 - Need tech research? Run `/research` before `/eng`.
 - Too big for one stream? Run `/swarm plan` to decompose into parallel streams.
 - Feature too big for one session? Run `/spec decompose` to break it into sequenced tasks in TODOS.md, then work through them with `/eng` → `/tdd` per task.
 - Problem space unclear? Start with `/spec discover` for deep discovery.
 - No UI work? Skip `/design` and go straight from `/spec` to `/eng`.
+- Modifying existing feature? `/spec` produces delta specs (ADDED/MODIFIED/REMOVED) that `/ship` merges into the spec registry.
 
 ---
 
@@ -143,4 +149,35 @@ cd .worktrees/<name>
 **Next steps after architecture:**
 - Feature recipe to implement each area
 - `/swarm plan` if multiple areas can be built in parallel
+
+---
+
+## Recipe: Exploration
+
+**Purpose:** Think through an unclear problem before committing to a plan.
+
+```
+/explore → /spec (or /quick, /research, /eng — whatever fits)
+```
+
+| Phase | Skill | What happens | Gate |
+|-------|-------|-------------|------|
+| 1 | `/explore` | Investigate codebase, compare approaches, map problem space, think freely | No gates — user drives direction |
+| 2 | Varies | Transition to appropriate skill when clarity is sufficient | User decides when to transition |
+
+**Use when:**
+- "I have an idea but I'm not sure what we need"
+- "Let me understand how this part works first"
+- "What would happen if we changed X?"
+- New domain, unfamiliar codebase, or half-formed requirements
+
+**Example:**
+```
+/explore How does our auth system handle session refresh?
+         I'm thinking about adding token rotation but not sure
+         what the impact would be.
+```
+
+**Transitions:** `/explore` suggests next steps but never forces them.
+The user decides when to move from exploration to action.
 

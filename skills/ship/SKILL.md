@@ -199,6 +199,69 @@ If `TODOS.md` doesn't exist: skip silently.
 
 ---
 
+## Step 5.7: Merge Delta Specs
+
+If `specs/deltas/` exists and contains delta spec files:
+
+```bash
+ls specs/deltas/*.md 2>/dev/null
+```
+
+For each delta spec, merge changes into the corresponding main spec:
+
+1. **Read** the delta spec (ADDED/MODIFIED/REMOVED sections)
+2. **Read** the target main spec in `specs/`
+3. **Apply** changes:
+   - ADDED requirements: append to the Requirements section
+   - MODIFIED requirements: replace the matching requirement in-place
+   - REMOVED requirements: delete the matching requirement
+4. **Update** the "Last updated" line to today's date
+5. **Move** the delta file to `specs/deltas/archive/{filename}`
+6. **Stage** the changed files
+
+If the target main spec doesn't exist (delta references a file that was
+deleted or never created), warn and skip that delta.
+
+If no deltas exist, skip silently.
+
+---
+
+## Step 5.8: Archive Artifacts
+
+Preserve the full artifact chain for this branch in `.history/`:
+
+```bash
+mkdir -p .history
+```
+
+Collect artifacts produced during this feature's lifecycle and archive them:
+
+```
+.history/{branch-name}-{YYYY-MM-DD}/
+  spec.md          # From /spec output (if produced this session)
+  design.md        # From /design output (if produced)
+  eng-plan.md      # From /eng output (if produced)
+  tdd-plan.md      # From /eng TDD plan (if produced)
+  review.md        # From /review verdict (if produced)
+  qa-report.md     # From /qa report (if exists in .qa-reports/)
+  retro.md         # From /retro report (if exists in .retro/)
+  delta-specs/     # Copy of delta specs before merge (if any)
+```
+
+**Rules:**
+- Only archive artifacts that actually exist — don't create empty placeholders
+- Copy from conversation context (spec, design, eng, review outputs) and from
+  on-disk reports (`.qa-reports/`, `.retro/`)
+- If no artifacts exist beyond commits, skip archival silently
+- Archive is for historical reference — never modify archived files after writing
+- Stage the `.history/` directory for commit
+
+This preserves the full decision chain: *why* we built it (spec), *how* we
+designed it (design/eng), *whether* it was reviewed (review), *whether* it
+works (QA), and *what we learned* (retro).
+
+---
+
 ## Step 6: Commit (bisectable chunks)
 
 Group changes into logical commits. Each commit = one coherent change.
