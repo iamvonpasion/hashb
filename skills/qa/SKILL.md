@@ -235,6 +235,19 @@ fixed vs new issues, append comparison to report.
 
 ---
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "Tests pass, so the feature works" | Tests verify code paths, not user experience. A passing test suite says nothing about layout breaks, missing states, or confusing flows. |
+| "I can see from the code that this works" | QA doesn't read source code. That's the point — you're testing what the user sees, not what the developer wrote. |
+| "Let me just fix this small issue I found" | QA NEVER fixes. The moment you fix, you lose objectivity about the remaining issues. Document it, hand it to `/fix`. |
+| "This page looks fine — skip the console check" | Console errors hide behind visually correct pages. Check the console after every interaction — silent JS errors become user-facing failures under load. |
+| "Mobile testing can wait" | 50%+ of users are on mobile. A feature that works on desktop but breaks on mobile is a broken feature. |
+| "I'll batch the screenshots later" | Document each issue immediately with screenshots. Batching leads to missed evidence and unreproducible reports. |
+
+---
+
 ## Rules
 
 - **NEVER fix anything.** Document only. Do not read source, edit files,

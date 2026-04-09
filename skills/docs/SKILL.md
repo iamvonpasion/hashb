@@ -449,3 +449,15 @@ interactive approval flow.
 - **Scope to docs only.** This is not a linter, not a code review, not an audit.
   It checks documentation health. Code quality is `/review`'s job, compliance is
   `/audit`'s job.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "The docs are fine — nobody's complained" | Nobody complains about stale docs because they stop reading them. Silent drift is worse than loud complaints. |
+| "Docs always go stale — cleaning them is Sisyphean" | Periodic cleanup prevents doc rot from compounding. A 15-minute `/docs` pass every release cycle keeps them current. |
+| "I'll update the docs when the feature is done" | Post-ship doc updates happen 30% of the time. Sync docs with code changes in the same commit. |
+| "Just delete the old docs — we'll rewrite later" | Deletion without consolidation loses institutional knowledge. Merge unique content first, then remove the duplicate. |
+| "The README is good enough" | READMEs cover getting started. Architecture decisions, domain rules, and operational runbooks need dedicated docs that stay in sync with the codebase. |

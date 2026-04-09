@@ -186,3 +186,15 @@ The value is in the thinking, not in reaching a conclusion quickly.
 | Suggest transitions, don't force them | The user decides when they're done exploring |
 | Read before speculating | Investigate the actual codebase, don't guess at structure |
 | Keep it conversational | This isn't a report — it's collaborative thinking |
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "I already understand this — let me skip to /spec" | If you understood it, you wouldn't be exploring. Premature specificity produces specs that solve the wrong problem. |
+| "Let me write some code to see if it works" | Explore is read-only. Writing code before understanding the problem creates attachment to a solution that may be wrong. |
+| "I'll just produce a quick spec instead" | Exploration and specification are different activities. Explore is for when you don't know what to specify yet. |
+| "This is taking too long — we should just start building" | Time spent understanding saves 3-5x time spent rebuilding. The cheapest code to change is code you haven't written yet. |
+| "I have enough context from the conversation" | Read the actual code. Assumptions about codebase structure are wrong more often than right. |

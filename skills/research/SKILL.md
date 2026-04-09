@@ -311,3 +311,16 @@ auto-proceed to `/eng arch` with the Research Brief as input.
 - **No over-engineering.** Don't recommend adapter patterns, plugin systems, or abstraction layers unless the user has a proven need. YAGNI applies.
 - **Admit unknowns.** If you can't verify something, say so. Don't fabricate.
 - **Don't over-research.** If the answer is obvious after Phase 2, skip to recommend.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "I know this library well — no need to check Context7" | Training data is stale. Libraries ship breaking changes, deprecate APIs, and rename exports. One verification call prevents hours of debugging. |
+| "Fetching docs wastes tokens" | Hallucinating an API costs more. Users debug for hours discovering the function signature changed. One fetch prevents a cascade of rework. |
+| "Stack Overflow has the answer" | Stack Overflow answers are unversioned. The top answer may target a 3-year-old API. Official docs for the detected version are the only reliable source. |
+| "This comparison is obvious — just pick the popular one" | Popularity doesn't mean fit. Bundle size, license, maintenance cadence, and stack compatibility all matter more than GitHub stars. |
+| "We don't need research — the team already decided" | Decisions without evidence are assumptions. A 15-minute research spike confirms or challenges the decision with current data. |
+| "I'll just use what I used in the last project" | Context matters. Different scale, different constraints, different team. What worked there may be wrong here. |

@@ -249,3 +249,14 @@ If the task is genuinely complex, don't produce a thin plan. Redirect:
 - **No Context7** — this is a quick pass. Use `/research` for library verification
 - **No TDD checkpoints** — just list what to test. Use `/eng` for formal TDD plans
 - **Escalate honestly** — a thin plan for a complex task is worse than redirecting
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "This complex task can fit in a quick plan" | If it touches 8+ files or needs architecture decisions, it needs `/eng`. A thin plan for a complex task creates false confidence. |
+| "I'll just add a few more details to be thorough" | Quick plans are under 80 lines. If you need more detail, the task needs a full skill — escalate. |
+| "I don't need to read the code first" | Planning without reading code means guessing at file structure, existing patterns, and dependencies. Read first, plan second. |
+| "I'll skip the risk section — there are none" | Every plan has risks. "None" means you haven't thought hard enough. Even a one-liner risk acknowledgment is better than silence. |

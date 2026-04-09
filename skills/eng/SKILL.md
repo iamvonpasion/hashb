@@ -28,6 +28,8 @@ gate only at decision points.
 | Reviewing an existing implementation plan | `/eng impl` |
 | Making an existing plan bulletproof | `/eng hold` |
 
+**Skip when:** Trivial change (typo, config value, single-line fix) where scope is obvious, no architecture decisions exist, and no TDD plan is needed. Use `/quick eng` instead, or just implement directly.
+
 ---
 
 ## Presentation Rules
@@ -540,3 +542,16 @@ Produce these tables in the summary. See `references.md` for templates:
 | Consume upstream artifacts | If `/spec` or `/design` handoffs exist, use them. Don't re-derive requirements |
 | Verify via Context7 | Architecture decisions touching libraries must be spot-checked against Context7 docs. Flag unverifiable assumptions |
 | Complexity routing | Small tasks get single-pass output. Large tasks get full flow. Match depth to scope |
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "The architecture is straightforward — skip to implementation" | Straightforward architectures still need scope confirmation and a TDD plan. Skipping scoping creates silent assumptions that surface as bugs. |
+| "I'm confident about this API — no need to verify with Context7" | Confidence is not evidence. Training data contains outdated patterns. One Context7 query prevents hours of debugging deprecated APIs. |
+| "This doesn't need an ADR — it's an obvious choice" | "Obvious" choices are the ones most often revisited. ADRs prevent future engineers from re-debating settled decisions. |
+| "The TDD plan is overkill for this size" | The TDD plan IS the execution contract. Without it, `/tdd` has no roadmap and implementation becomes ad-hoc. |
+| "I'll figure out error handling during implementation" | Error paths not planned are error paths not tested. The error map catches the cases that produce production incidents. |
+| "We can refactor this later if it doesn't scale" | "Later" refactors are 5-10x more expensive. Architecture decisions made now compound — get them right with data, not hope. |

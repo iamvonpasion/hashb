@@ -118,6 +118,10 @@ Write the **minimum code** to make the test pass.
 - No extra features, no "while I'm here" additions
 - No premature abstractions — three similar lines > one premature helper
 - Follow patterns from the codebase — read existing code first
+- **Scope discipline:** Touch only what the task requires. Do not clean up
+  adjacent code, refactor unrelated imports, remove comments you disagree with,
+  add features not in the TDD plan, or modernize syntax in files you're only
+  reading. Note issues for later — don't fix them now.
 
 **Run the test. It MUST pass.**
 
@@ -231,6 +235,20 @@ Summarize what was built and hand off to `/review`.
 - Suite green → auto-invoke `/review`
 - If `/review` returns CHANGES REQUESTED → fix and re-run affected cycles
 - Max 2 review rounds, then escalate to user
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "I'll write tests after the code works" | Tests written post-facto verify implementation, not behavior. You end up testing what you built instead of what you should have built. |
+| "This is too simple to need a test" | Simple code evolves into complex code. The test documents intent and catches regressions when someone changes it later. |
+| "The RED step is slowing me down" | Skipping RED means you don't know if your test actually verifies anything. A test that never failed might never catch a bug. |
+| "I need to refactor first before writing tests" | Refactor happens in the REFACTOR phase, after GREEN. Refactoring without test coverage is guessing. |
+| "I'll just write all the tests first, then implement" | Batching tests breaks the feedback loop. You lose the signal of which implementation change satisfies which test. |
+| "The existing tests cover this already" | If existing tests covered the new behavior, they would have caught the need for it. New behavior needs new tests. |
+| "I know this implementation is correct" | Confidence is not evidence. The test suite is your proof — without it, the next developer has only your word. |
 
 ---
 

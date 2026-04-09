@@ -12,6 +12,8 @@ Run after `/ship` lands. Capture what happened so the next cycle is better.
 **Input:** PR URL or branch name (just shipped).
 **Output:** Retro report with scored findings and concrete action items.
 
+**Skip when:** The change was a trivial config fix, typo, or dependency bump with no process learnings. If the change involved any of: multiple fix cycles, unexpected scope changes, quality gate failures, or new patterns — run the retro.
+
 ---
 
 See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
@@ -303,6 +305,18 @@ C) Review each — walk me through them one by one
 **Autonomous mode:** Retro is typically the last skill in a recipe chain.
 Auto-persist learnings (Phase 4.5) unless `--no-memory` was passed.
 Do not auto-proceed to another skill — retro is a reflection point.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "Everything went fine — no retro needed" | If everything went fine, the retro takes 5 minutes. If something went wrong and you skip the retro, it happens again. |
+| "We already know what went wrong" | Knowing is not the same as acting. The retro produces concrete action items — without them, knowledge doesn't become improvement. |
+| "The action items from last retro weren't done, so why bother" | That's a finding, not an excuse. Undone action items are the retro's most valuable signal — escalate them. |
+| "This was a small change — too minor for a retro" | Small changes that reveal blind spots in quality gates are the most important retros. The issue isn't size — it's what you learned. |
+| "I'll just note the learnings mentally" | Mental notes don't persist across sessions. Written retro reports with persisted memories are the only way future work benefits. |
 
 ---
 
