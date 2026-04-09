@@ -69,10 +69,63 @@ cd .worktrees/<name>
 - Requirements unclear? Run `/explore` first to think through the problem space.
 - Need tech research? Run `/research` before `/eng`.
 - Too big for one stream? Run `/swarm plan` to decompose into parallel streams.
-- Feature too big for one session? Run `/spec decompose` to break it into sequenced tasks in TODOS.md, then work through them with `/eng` → `/tdd` per task.
+- Feature too big for one session? Run `/spec decompose` — see **Decomposed Feature** below.
 - Problem space unclear? Start with `/spec discover` for deep discovery.
 - No UI work? Skip `/design` and go straight from `/spec` to `/eng`.
 - Modifying existing feature? `/spec` produces delta specs (ADDED/MODIFIED/REMOVED) that `/ship` merges into the spec registry.
+
+### Decomposed Feature
+
+When a feature is too large for a single session, decompose it first, then
+work through tasks one at a time. TODOS.md is the shared state across sessions.
+
+```
+/spec decompose → [per task: /eng → /tdd → /review → /qa → /ship] → /retro
+```
+
+**Lifecycle:**
+
+| Phase | What happens | Persistence |
+|-------|-------------|-------------|
+| 1. Decompose | `/spec decompose` breaks the feature into sequenced tasks | Tasks written to TODOS.md |
+| 2. Pick task | `/eng` reads TODOS.md, identifies next task with dependencies met | Task #{N} becomes the session scope |
+| 3. Build task | `/eng` → `/tdd` → `/review` → `/qa` for the picked task | Normal feature workflow per task |
+| 4. Ship task | `/ship` marks task #{N} complete in TODOS.md, creates PR | `- [x]` with completion date and PR ref |
+| 5. Next task | Start a new session. `/eng` auto-detects next available task | TODOS.md tracks progress |
+| 6. Repeat | Until all tasks are `[x]` | — |
+| 7. Retro | `/retro` after the last task ships | Learnings persisted |
+
+**Rules:**
+- One task per `/eng` session. Finish it (eng → tdd → review → qa → ship) before starting the next.
+- Respect the dependency graph — don't start a task until its dependencies are complete.
+- Independent tasks can run in parallel with `/swarm` (spec decompose identifies these).
+- If a task has UI work, include `/design` in that task's cycle (after `/eng`, before `/tdd`).
+- If a task turns out to be too large during `/eng`, run `/spec decompose` on that task to break it down further.
+- Re-running `/spec decompose` on an existing feature shows progress and suggests the next task.
+
+**Cross-session handoff:** TODOS.md is the only persistence layer. Each `/eng`
+session reads it, picks a task, and scopes to that task. Each `/ship` marks the
+task complete. No other state is needed.
+
+**Example:**
+```
+# Session 1: Decompose
+/spec decompose Build a notification system with email, push, and in-app channels.
+# → writes 5 tasks to TODOS.md
+
+# Session 2: Task #1
+/eng
+# → picks task #1 (user model + migrations), plans, builds, ships
+
+# Session 3: Task #2
+/eng
+# → picks task #2 (notification service), plans, builds, ships
+
+# ... continue until all tasks complete
+
+# Final session
+/retro
+```
 
 ---
 

@@ -53,6 +53,27 @@ All extended fields are optional — existing TODOS.md items without `#N` IDs or
 `(depends:)` refs continue to work unchanged. Skills that read TODOS.md
 (`/fix`, `/eng`, `/ship`, `/audit`) should treat the extended fields as additive context.
 
+### Completion metadata (for decomposed tasks)
+
+When `/ship` completes a decomposed task, mark it with:
+
+```markdown
+- [x] P1 [M] #1 Auth middleware — JWT validation + refresh (depends: none)
+  - Goal: Request authentication layer that validates and refreshes JWTs
+  - AC:
+    - [x] Valid JWT passes through to handler
+    - [x] Expired JWT triggers refresh flow
+    - [x] Invalid JWT returns 401
+  - **Completed:** v1.2.0 (2024-01-15) — PR #42
+```
+
+**Rules:**
+- Mark task `[x]` only when ALL acceptance criteria are `[x]`
+- If some ACs are met but not all, the task stays `[ ]`
+- Version, date, and PR reference come from the `/ship` session that completed the work
+- Keep completed tasks in TODOS.md until the feature is fully done (all tasks `[x]`),
+  then follow the standard retention rule (one release cycle)
+
 ## General Markdown
 
 - Use ATX headings (`#`), not Setext (underline)

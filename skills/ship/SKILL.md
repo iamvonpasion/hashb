@@ -188,14 +188,49 @@ Format: `## [X.Y.Z.W] - YYYY-MM-DD`
 
 ## Step 5.5: TODOS.md Update
 
-If `TODOS.md` exists: cross-reference the diff against open items.
-If the diff clearly completes a TODO, move it to the Completed section
-with `**Completed:** vX.Y.Z (YYYY-MM-DD)`.
-
-Be conservative — only mark items when the diff clearly shows the work
-is done. Output summary of what was marked complete.
-
 If `TODOS.md` doesn't exist: skip silently.
+
+### Standard TODOs
+
+If the diff clearly completes a standalone TODO (no `#N` task ID), mark it:
+`- [x] (YYYY-MM-DD) Description`
+
+### Decomposed tasks (from /spec decompose)
+
+If TODOS.md has `### Feature:` sections with `#N` task IDs:
+
+1. **Identify the active task.** Check the `/eng` scope card in conversation
+   context for `Active task: #{N}`. If not found, match the diff against
+   open tasks by description and AC.
+
+2. **Verify AC completion.** For each acceptance criterion on the active task,
+   check whether the diff and test results demonstrate it's met:
+   - AC clearly met by diff + passing tests → mark `[x]`
+   - AC not clearly demonstrated → leave `[ ]`
+
+3. **Mark task complete** only if ALL ACs are `[x]`:
+   ```markdown
+   - [x] P1 [M] #1 Description (depends: none)
+     - Goal: ...
+     - AC:
+       - [x] criterion 1
+       - [x] criterion 2
+     - **Completed:** vX.Y.Z (YYYY-MM-DD) — PR #{pr_number}
+   ```
+
+4. **Partial completion.** If some ACs are met but not all, mark the met ACs
+   `[x]` but leave the task as `[ ]`. Output which ACs are still outstanding.
+
+5. **Output summary:**
+   ```
+   TODOS.md: Task #{N} — {complete | partial (M/N ACs met)}
+   {if complete: Next available task: #{M} — {description}}
+   ```
+
+### Conservative rule
+
+Be conservative — only mark items when the diff and test results clearly show
+the work is done. "Should be done" is not evidence. Check the AC.
 
 ---
 

@@ -45,8 +45,9 @@ Assess complexity at the start and adjust depth:
 |------------|--------|----------|
 | **Small** | Single story, clear problem, ≤3 requirements | Combine all phases into one response. 1 gate max (final confirmation) |
 | **Medium** | 3-8 stories, known domain, moderate scope | Stream phases continuously. 2 gates (after scope, after requirements+AC) |
-| **Large** | Unclear problem, many stakeholders, 8+ stories, new domain | Full flow with discovery. 2 gates + discovery confirmation |
-| **Decompose** | Large feature, multi-session, needs task breakdown | Phase 0 → Phase D → Phase 4. 2 gates (scope, task manifest) |
+| **Large** | Unclear problem, many stakeholders, 8+ stories, new domain | Full flow with discovery. 2 gates + discovery confirmation. **Cascade check:** if scope spans 3+ distinct domains/areas, escalate to Product |
+| **Product** | Entire product/app V1, multiple domains/areas (3+), greenfield, or 8+ stories across distinct functional areas | Auto-route to decompose. Never run full Define for product-level scope — it produces a wall of requirements nobody can act on. Decompose first, then each task gets its own mini-spec during `/eng` |
+| **Decompose** | Large feature, multi-session, explicit task breakdown request | Phase 0 → Phase D → Phase 4. 2 gates (scope, task manifest) |
 
 ---
 
@@ -73,6 +74,7 @@ Assess complexity at the start and adjust depth:
 > - `/spec define` mode? → **Skip to Phase 2**
 > - `/spec decompose` mode? → **Skip to Phase D**
 > - Large feature, needs breakdown? → **Skip to Phase D**
+> - **Product-level scope** (V1, 3+ domains, 8+ stories across areas)? → **Skip to Phase D** (auto-route, do not run full Define)
 
 ---
 
@@ -132,7 +134,9 @@ If mode wasn't specified by the user, determine it:
 | User has a ticket/brief with acceptance criteria draft | Define |
 | User says "break this down", "too big", "multiple sessions" | Decompose (`/spec decompose`) |
 | Large feature with existing spec output | Decompose |
-| Goal spans multiple areas/modules, would need 8+ files changed | Decompose (recommend proactively) |
+| Goal spans multiple domains, areas, features, or concerns (3+) | Decompose (recommend proactively) |
+| Entire product/app V1, greenfield project, or multi-domain system | Decompose (auto-route — never run full Define at product scale) |
+| 8+ stories identified during scoping, touching distinct functional areas | Decompose (recommend proactively) |
 | Ambiguous | Ask the user |
 
 ### Scope Card
@@ -141,7 +145,8 @@ If mode wasn't specified by the user, determine it:
 SPEC SCOPE ──────────────────────────────────────────────────────
 
   Problem area    {name}
-  Mode            {discover | define | auto}
+  Mode            {discover | define | decompose | auto}
+  Complexity      {small | medium | large | product}
   Stakeholders    {who cares about this}
   Users           {who will use this}
   Constraints     {budget, timeline, tech limits}
@@ -416,7 +421,11 @@ For each task, produce:
 | Description | What to build (1 sentence, imperative) |
 | Dependencies | `(depends: #N, #M)` or `(depends: none)` — immediate predecessors only |
 | Goal | 1 sentence — what this task achieves |
-| AC | 2-5 testable acceptance criteria |
+| AC | 3-5 testable acceptance criteria |
+
+**AC depth rule:** 3-5 acceptance criteria per task at this stage. Decompose
+ACs define "what done looks like" — `/eng` expands them into full GIVEN/WHEN/THEN
+detail during Phase 3. More than 5 means you're over-specifying for decompose.
 
 ### Decompose Output
 
@@ -427,10 +436,10 @@ DECOMPOSE ───────────────────────�
 
   Feature         {name}
   Tasks           {N}
-  Milestones      {N — or "none, single sequence"}
+  Milestones      {N — or "single sequence"}
 
-  TASK MANIFEST
-  ─────────────────────────────────────────────────
+  MILESTONE 1: {name}  ═══════════════════════════════════════
+  {one-line goal for this milestone}
 
   #1  P1 [M] {description} (depends: none)
       Goal: {1 sentence}
@@ -444,6 +453,9 @@ DECOMPOSE ───────────────────────�
         - {criterion}
         - {criterion}
 
+  MILESTONE 2: {name}  ═══════════════════════════════════════
+  {one-line goal for this milestone}
+
   #3  P1 [L] {description} (depends: #1, #2)
       Goal: {1 sentence}
       AC:
@@ -456,20 +468,30 @@ DECOMPOSE ───────────────────────�
   #1 ──→ #3 ──→ #4
   #2 ──┘
 
+  PARALLEL OPPORTUNITIES
+  ─────────────────────────────────────────────────
+  {List independent tasks and note they can run concurrently.
+   If >= 3 independent tasks, recommend /swarm.
+   If no tasks are independent: "All tasks are sequential."}
+
 ─────────────────────────────────────────────────────────────────
 ```
 
-> **GATE D.** User approves the task manifest before writing.
+**Milestone rules:**
+- If total tasks ≤ 5 and form a single sequence, omit milestone headers
+- If total tasks > 5 or tasks group into distinct phases, use milestone headers
+- Each milestone gets a one-line goal statement
 
-### /swarm Recommendation
+**Parallel rules:**
+- Always include the PARALLEL OPPORTUNITIES section
+- If ≥ 2 tasks have no mutual dependencies, list them
+- If ≥ 3 independent tasks, explicitly recommend `/swarm`
+- If no parallelism: "All tasks are sequential — no parallelism available."
 
-After presenting the manifest, check for parallelism:
-
-If ≥ 3 tasks have no mutual dependencies, output:
-
-```
-💡 Tasks #N, #M, #K are independent — consider /swarm for parallel execution.
-```
+> **GATE D.** User approves the task manifest. Approval means: writing tasks
+> to TODOS.md. After that, work through tasks with `/eng` per task — each
+> task gets its own `/eng` → `/tdd` → `/review` → `/qa` → `/ship` cycle.
+> No code until `/eng` plans the task.
 
 ### Write to TODOS.md
 
@@ -501,6 +523,43 @@ After user approval, write tasks under a feature heading:
 ---
 
 ## Phase 4 — Summary
+
+### If Decompose Mode
+
+Phase 4 after decompose produces a brief product overview and handoff — not a
+full spec document (Phases 2-3 were skipped, so stories/FRs/NFRs don't exist).
+
+```
+✓ DECOMPOSE COMPLETE ────────────────────────────────────────────
+
+  Feature         {name}
+  Tasks           {N} written to TODOS.md
+  Milestones      {N}
+  Dependencies    {summary of dependency chain}
+  Parallel        {N} tasks can run concurrently
+
+  PRODUCT OVERVIEW
+  ─────────────────────────────────────────────────
+  {2-3 sentence summary of what the feature/product does,
+   the problem it solves, and who it's for. Derived from
+   Phase 0 scope card and decompose discussion.}
+
+  TASK SEQUENCE
+  ─────────────────────────────────────────────────
+  {copy of SEQUENCE diagram from Phase D}
+
+  ➤ NEXT: /eng on task #{first available} (or /swarm
+    for independent tasks). Each task follows:
+    /eng → /tdd → /review → /qa → /ship
+
+─────────────────────────────────────────────────────────────────
+```
+
+> Skip the Spec Registry, Handoff Summary, and Next Step table below —
+> they apply to define mode only. Decompose output IS the handoff.
+> TODOS.md IS the artifact.
+
+### If Define Mode (default)
 
 > **GATE 2.** Present the full spec for user approval.
 
