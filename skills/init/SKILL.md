@@ -430,6 +430,7 @@ Run a quick check to confirm the setup is correct.
 | Profile | CLAUDE.md exists with Project Profile | {pass / fail} |
 | Profile | All Profile fields populated | {N}/9 |
 | Profile | Context7 listed in MCP Servers | {pass / fail} |
+| Profile | code-review-graph in MCP Servers (if 50+ source files) | {pass / skip / fail} |
 | Routing | Skill Routing section present | {pass / fail} |
 | Stray docs | No overlapping documents outside hashb structure | {pass / fail ({N} remaining)} |
 | Context | CLAUDE.md under 200 lines | {pass / fail ({N} lines)} |

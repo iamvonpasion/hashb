@@ -315,7 +315,18 @@ Based on the detected stack, suggest additional MCP servers:
 | Stack signal | Suggested MCP Server | Purpose |
 |---|---|---|
 | React / Next.js / frontend | Vercel AI SDK / React best practices plugin | React patterns, performance, accessibility |
+| Any codebase with 50+ source files | code-review-graph (e.g., [graphify](https://github.com/safishamsi/graphify)) | Structural code intelligence: dependency graphs, module boundaries, blast radius, call chains |
 | Any codebase | Code review plugin | Automated review patterns |
+
+```
+RECOMMENDED MCP SERVER:
+  code-review-graph (e.g., graphify) — structural code intelligence for
+  reviews, debugging, and architecture validation.
+  Install: pip install graphifyy
+  MCP server: graphify --mcp (configure in .claude/settings.json)
+  Already installed? Confirm and continue.
+  Skip? Optional — skills work without it but gain semantic code analysis when available.
+```
 
 ```
 ADDITIONAL MCP SERVERS:

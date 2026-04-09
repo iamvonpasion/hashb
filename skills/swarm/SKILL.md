@@ -104,6 +104,18 @@ non-overlapping set of files.
 
 **Rule:** If two pieces of work touch the same file, they're the same stream.
 
+### Graph-Aware Independence Check (if code-review-graph MCP is available)
+
+If the consumer's Project Profile lists `code-review-graph`, query the dependency
+graph to verify stream independence. Confirm that no stream's file set has
+dependencies on another stream's file set beyond declared contracts. If hidden
+cross-stream dependencies exist, flag them before manifest approval. Also verify
+that shared dependencies (modules imported by multiple streams) are assigned to
+prerequisites or infrastructure. Max 1 query.
+
+If code-review-graph is not available, infer independence from file paths and
+directory structure.
+
 ### Step 2: Identify shared prerequisites
 
 Changes that multiple streams depend on — build these first, merge to base,

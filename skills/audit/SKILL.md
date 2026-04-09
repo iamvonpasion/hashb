@@ -122,6 +122,7 @@ Check CLAUDE.md and Project Profile completeness.
 | Deploy field | {populated / missing} | {value if present} |
 | MCP Servers field | {populated / missing} | {value if present} |
 | Context7 in MCP Servers | {present / missing — CRITICAL} | Required for research + plan skills |
+| code-review-graph in MCP Servers | {present / missing — RECOMMENDED} | Enhances `/review`, `/fix`, `/eng`, `/audit`, `/swarm` with structural code intelligence |
 | Skill Routing section | {present / missing} | Required for natural language skill invocation |
 
 > **Context7 is required.** If the MCP Servers field is missing or does not
@@ -297,6 +298,14 @@ find . -maxdepth 3 -name "*.md" \
 For each applicable rule, **sample 5-10 representative files** matching the rule's
 `paths:` patterns. This is a strategic audit, not an exhaustive lint.
 
+### Graph-Aware Sampling (if code-review-graph MCP is available)
+
+If the consumer's Project Profile lists `code-review-graph`, use cluster analysis
+to select representative files from each module cluster rather than random sampling.
+This ensures coverage of all architectural boundaries. Max 1 query for sample selection.
+
+If code-review-graph is not available, sample from file paths as usual.
+
 > **All subcategories (2A-2G) are mandatory.** Mark as "N/A" if the rule doesn't
 > apply to this repo. Do NOT skip a category without explicitly marking it.
 
@@ -326,6 +335,16 @@ Cross-reference the declared Project Profile against the actual codebase.
 | Architecture: {from Profile} | {observed patterns} | {yes / mismatch: ...} |
 | Testing: {from Profile} | {test config files} | {yes / mismatch: ...} |
 | Deploy: {from Profile} | {deploy config files} | {yes / mismatch: ...} |
+
+### Graph-Aware Architecture Check (if code-review-graph MCP is available)
+
+If the consumer's Project Profile lists `code-review-graph`, query the dependency
+graph to verify that actual module boundaries and dependency directions match the
+declared Architecture. Flag tightly coupled modules declared as independent, or
+dependency directions that violate the declared pattern. Max 1 query.
+
+If code-review-graph is not available, infer architecture from directory structure
+and dependency files.
 
 **Flag mismatches.** A declared "Vitest" but configured "Jest" means either the
 Profile is stale or the config is wrong. Report it; don't judge which is correct.

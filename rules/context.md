@@ -47,6 +47,7 @@ important rules from being lost in noise. These rules align with
 | E1 | **Audit and review skills must sample, not exhaustively scan** | 5-10 representative files per category. Exhaustive scans consume context that degrades analysis quality. |
 | E2 | **Phase handoffs pass only required inputs** | Orchestrators must not forward full conversation history. Each phase receives its structured input only. |
 | E3 | **Prefer CLI tools over MCP servers when equivalent — except Context7** | MCP tool listings consume context tokens on every call. Native CLI tools have zero listing overhead. Context7 is exempt: it provides live library docs unavailable via CLI. |
+| E3a | **code-review-graph queries replace grep chains, not add to them** | When the graph answers a structural question (dependencies, call graph, module boundaries), skip the equivalent grep/read calls. Budget: max 3 queries per skill invocation unless the skill specifies otherwise. |
 | E4 | **Use `/compact` before context reaches 70%** | At 70%+ context, precision degrades. At 85%+, hallucinations increase. Compact proactively. |
 | E5 | **CLAUDE.md survives compaction — rules and skills do not** | Design critical instructions for CLAUDE.md placement. Ephemeral guidance belongs in rules (reloaded on file access) or skills (reloaded on invocation). |
 

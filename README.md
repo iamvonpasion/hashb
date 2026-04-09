@@ -150,11 +150,16 @@ Add this to your project's `CLAUDE.md` so skills adapt to your stack:
 - Architecture: Modular monolith
 - Testing: Vitest + Playwright
 - Deploy: Vercel
-- MCP Servers: Context7 (library docs)
+- MCP Servers: Context7 (library docs), code-review-graph (e.g., graphify)
 ```
 
 Skills read these fields to adjust review checks, research sources, and scaffolding.
 All fields optional. Skills use sensible defaults when fields are missing.
+
+**Optional: code-review-graph.** For codebases with 50+ source files, adding a
+[code-review-graph](https://github.com/safishamsi/graphify) MCP server enables
+semantic code analysis in `/review`, `/eng`, `/fix`, `/audit`, and `/swarm`.
+Skills use it when available and fall back to grep when not. See `/hashb:init` for setup.
 
 ---
 
