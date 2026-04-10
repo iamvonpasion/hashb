@@ -60,7 +60,7 @@ Phase 5: Report
 
 ---
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 

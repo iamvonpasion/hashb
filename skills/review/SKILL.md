@@ -32,17 +32,23 @@ that tests won't find and QA can't see.
 
 ## Presentation Rules
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
 ## Phase 1: Scope the Review
 
 ```bash
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
-  || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
-  || echo "main")
+if command -v gh >/dev/null 2>&1; then
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
+    || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
+    || echo "main")
+else
+  echo "⚠ gh CLI not found — defaulting BASE to 'main'"
+  BASE="main"
+fi
 
 echo "REVIEWING: $BRANCH → $BASE"
 git diff $BASE...HEAD --stat
@@ -58,6 +64,8 @@ git log $BASE..HEAD --oneline
   and performance checks to the declared stack and architecture
 - Check for rule overrides — if a consumer rule has `overrides:` targeting a
   generic rule, the override's guidance takes precedence for its matched paths
+- Check Claude Code memories for relevant project/feedback memories from prior retros —
+  recurring patterns flagged by `/retro` should inform review severity
 
 ```bash
 # Files changed — these are the review scope

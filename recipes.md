@@ -10,7 +10,7 @@ the skills to run in order, the gates between them, and what gets handed off.
 
 ## Patterns (apply to all recipes)
 
-**Testing pattern:** `/qa` reports bugs. `/fix` addresses them. `/qa` verifies. Repeat until clean.
+**Testing pattern:** `/qa` reports bugs. `/fix` addresses them. `/qa` verifies. Repeat until clean — max 3 cycles. If bugs persist after 3 QA/fix cycles, escalate to user with remaining issues.
 
 **Review pattern:** `/review` peer-reviews implementation before `/qa`. APPROVED → proceed. CHANGES REQUESTED → fix and re-review (max 2 cycles). ESCALATE → stop for user.
 

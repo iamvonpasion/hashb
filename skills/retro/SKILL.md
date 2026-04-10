@@ -14,7 +14,7 @@ Run after `/ship` lands. Capture what happened so the next cycle is better.
 
 ---
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -23,8 +23,16 @@ See `skills/shared/formatting.md` for presentation rules (progress indicators, d
 Reconstruct what actually happened during this cycle.
 
 ```bash
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo "main")
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+if command -v gh >/dev/null 2>&1; then
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
+    || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
+    || echo "main")
+else
+  echo "⚠ gh CLI not found — defaulting BASE to 'main'"
+  BASE="main"
+fi
 
 # What was planned vs what shipped
 gh pr view --json title,body,commits,reviews,comments

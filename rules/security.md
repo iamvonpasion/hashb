@@ -8,8 +8,19 @@ description: >
 paths:
   - "**/*.ts"
   - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
   - "**/*.cs"
   - "**/*.py"
+  - "**/*.go"
+  - "**/*.java"
+  - "**/*.kt"
+  - "**/*.rb"
+  - "**/*.rs"
+  - "**/*.php"
+  - "**/*.swift"
+  - "**/*.vue"
+  - "**/*.svelte"
 ---
 
 # Security Rules

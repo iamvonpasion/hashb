@@ -83,7 +83,7 @@ run it again to update or fix drift.
 
 ---
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -417,6 +417,37 @@ See `references.md` for the HASHB.md template. Tailor the guide using the
 Project Profile — only include relevant recipes, actual test commands, and
 rules that exist in the repo.
 
+### Guard Hooks
+
+Scaffold Claude Code hooks for destructive command protection. These use
+the `PreToolUse` hooks API — enforcement that cannot be bypassed, even with
+`--dangerously-skip-permissions`.
+
+**If `.claude/settings.json` already has hooks configured:** Merge, don't overwrite.
+**If missing or no hooks section:** Create with guard hook configuration.
+
+Create `.claude/hooks/guard-check.sh` and add hook configuration to
+`.claude/settings.json`. See `references.md` for the hook template and
+guard script content.
+
+> Guard hooks are recommended for production repos. Frame as opt-in but
+> strongly recommended during the init walkthrough.
+
+### CI/CD Pipeline
+
+If no CI configuration is detected, scaffold a starter pipeline based on the
+detected stack.
+
+```bash
+ls .github/workflows/*.yml .github/workflows/*.yaml \
+   .gitlab-ci.yml Jenkinsfile .circleci/config.yml \
+   .travis.yml bitbucket-pipelines.yml 2>/dev/null
+```
+
+**If CI already exists:** Skip — don't overwrite.
+**If no CI detected:** Offer to scaffold based on the Project Profile Stack.
+See `references.md` for CI templates per stack (GitHub Actions, GitLab CI).
+
 ---
 
 ## Phase 5: Verify
@@ -447,6 +478,9 @@ Run a quick check to confirm the setup is correct.
 | Docs | README.md has required sections | {pass / fail ({N}/5)} |
 | Docs | LICENSE file exists | {pass / fail} |
 | Docs | HASHB.md getting started guide | {pass / fail} |
+| Hooks | `.claude/settings.json` has PreToolUse guard hook | {pass / skipped / fail} |
+| Hooks | `.claude/hooks/guard-check.sh` exists and is executable | {pass / skipped / fail} |
+| CI/CD | CI config exists | {pass / scaffolded / skipped} |
 
 ### Summary
 

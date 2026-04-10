@@ -28,7 +28,7 @@ Execute the implementation plan from `/eng` using strict test-driven development
 
 ## Presentation Rules
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -70,10 +70,12 @@ Proceed with cycle 1?
 Before writing any code, ensure you're on a feature branch:
 
 ```bash
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   echo "⚠ ON PROTECTED BRANCH — creating feature branch"
-  SLUG=$(echo "{feature-description}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | head -c 30)
+  SLUG=$(echo "{feature-description}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+  SLUG="${SLUG:0:30}"
   git checkout -b "feat/$SLUG"
 fi
 ```
@@ -162,6 +164,31 @@ CYCLE {N}/{total} COMPLETE
 **If more cycles remain:** Proceed to next cycle.
 
 **If user asked to pause:** Save state and report where to resume with `/tdd continue`.
+
+### Checkpoint Persistence
+
+After each cycle checkpoint, persist state to disk so `/tdd continue` can resume
+after context compaction:
+
+```bash
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+cat > ".tdd-checkpoint-${BRANCH}.json" << CKPT
+{
+  "branch": "$BRANCH",
+  "total_cycles": {total},
+  "completed": {N},
+  "last_test": "{test file}",
+  "last_status": "GREEN",
+  "eng_plan_summary": "{one-line summary of remaining cycles}",
+  "updated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+CKPT
+```
+
+**On `/tdd continue`:** Read `.tdd-checkpoint-{branch}.json` first. If it exists,
+use it to determine which cycle to resume from instead of re-parsing conversation context.
+
+**On completion (Phase 3 pass):** Clean up: `rm -f ".tdd-checkpoint-${BRANCH}.json"`
 
 ---
 

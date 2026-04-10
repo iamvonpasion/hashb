@@ -17,7 +17,7 @@ address root cause makes the next bug harder to find.
 
 ## Presentation Rules
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -177,6 +177,31 @@ Do not continue investigating silently. Present this to the user and WAIT:
 > 3 strikes leads to 6+ attempts, wasted commits, and trust erosion.
 > Stopping at 3 and asking is always cheaper than guessing at 6.
 
+### Strike Persistence
+
+Persist strike state to disk so the 3-strike rule survives context compaction:
+
+**On each failed hypothesis**, write `.fix-state-{branch}.json`:
+
+```json
+{
+  "branch": "{branch}",
+  "bug": "{short description}",
+  "strikes": [
+    {"hypothesis": "...", "result": "disproved — ...", "timestamp": "..."}
+  ],
+  "status": "INVESTIGATING"
+}
+```
+
+On 3rd strike, set `"status": "HARD_STOP"`.
+
+**At Phase 2 start**, read `.fix-state-{branch}.json` if it exists:
+- If `status` is `HARD_STOP` — present the 3-strike stop immediately.
+- If strikes exist but status is `INVESTIGATING` — resume from recorded position.
+
+**On resolution:** `rm -f ".fix-state-${BRANCH}.json"`
+
 ---
 
 ## Phase 3: Fix
@@ -188,10 +213,12 @@ Once root cause is **confirmed** (not suspected — confirmed):
 Before writing any code, ensure you're on a feature branch:
 
 ```bash
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   echo "⚠ ON PROTECTED BRANCH — creating fix branch"
-  SLUG=$(echo "{short-bug-description}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | head -c 30)
+  SLUG=$(echo "{short-bug-description}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+  SLUG="${SLUG:0:30}"
   git checkout -b "fix/$SLUG"
 fi
 ```
