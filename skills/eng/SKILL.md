@@ -158,6 +158,7 @@ grep -r "TODO\|FIXME\|HACK" -l --exclude-dir={node_modules,vendor,.git,dist,buil
 
 Read if they exist: `CLAUDE.md`, `TODOS.md`, `docs/designs/`.
 
+<<<<<<< HEAD
 ### Task Pickup (decomposed features)
 
 If TODOS.md contains decomposed tasks (has `### Feature:` sections with `#N`
