@@ -35,7 +35,7 @@ Stream output continuously — gate only at decision points.
 
 ## Presentation Rules
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -322,16 +322,36 @@ context — `/eng` references them directly when it needs detail.
 
 ```
 DESIGN → ENG:
-  Screens:      {N} ({list names})
-  Components:   {N new, M reused, K extended}
-  Key states:   {most complex state machines — name them}
-  Error UX:     {N} error scenarios defined (see Phase 2 for detail)
-  A11y:         WCAG {level}, {key requirements}
-  Data needs:   {what data each screen requires}
+  Screens:        {N} ({list names})
+  Components:     {enumeration below}
+  Key states:     {most complex state machines — name them}
+  Error UX:       {error scenario table below}
+  A11y:           WCAG {level}, {key requirements}
+  Data needs:     {data flow matrix below}
+
+  COMPONENT ENUMERATION
+  ─────────────────────────────────────────────────
+  | Component | Status | Key Props | Screen(s) |
+  |-----------|--------|-----------|-----------|
+  | {name}    | New    | {props}   | {screens} |
+  | {name}    | Reuse  | —         | {screens} |
+  | {name}    | Extend | {changes} | {screens} |
+
+  ERROR SCENARIO TABLE
+  ─────────────────────────────────────────────────
+  | Scenario | User Message | Recovery Action | Screen |
+  |----------|-------------|-----------------|--------|
+  | {error}  | {message}   | {button/action} | {screen} |
+
+  DATA FLOW MATRIX
+  ─────────────────────────────────────────────────
+  | Screen | Data Source | Pattern | Notes |
+  |--------|------------|---------|-------|
+  | {name} | {API/store} | {fetch/subscribe} | {cache, polling, etc.} |
 ```
 
-This summary is the **pointer** — `/eng` reads the full design phases above
-when it needs wireframes, state machines, or error specs.
+This summary preserves full detail across skill boundaries — `/eng` does not
+need conversation context to understand the design.
 
 ---
 

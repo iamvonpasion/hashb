@@ -19,21 +19,27 @@ the PR URL at the end.
 
 **Never stop for:**
 - Uncommitted changes (include them)
-- Version bump choice for MICRO/PATCH (auto-decide)
+- Version bump choice for PATCH (auto-decide)
 - CHANGELOG content (auto-generate)
 - Commit message approval (auto-commit)
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
 ## Step 1: Pre-flight
 
 ```bash
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
-  || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
-  || echo "main")
+if command -v gh >/dev/null 2>&1; then
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
+    || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
+    || echo "main")
+else
+  echo "⚠ gh CLI not found — defaulting BASE to 'main'"
+  BASE="main"
+fi
 echo "BRANCH: $BRANCH  BASE: $BASE"
 ```
 
@@ -152,6 +158,51 @@ continuing. If no issues: continue.
 
 Output: `Pre-Landing Review: N issues — M auto-fixed, K asked`
 
+### Secret Scanning
+
+Check the diff for leaked secrets using an automated scanner:
+
+```bash
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks detect --source . --log-opts="$BASE..HEAD" --no-banner
+elif command -v trufflehog >/dev/null 2>&1; then
+  trufflehog git file://. --since-commit="$(git merge-base HEAD $BASE)" --only-verified
+else
+  echo "⚠ No secret scanner found (gitleaks or trufflehog). Manual review only."
+fi
+```
+
+| Scanner result | Action |
+|----------------|--------|
+| Secrets found | **STOP.** List findings. Do not proceed until resolved. |
+| No secrets found | Continue — note "Secret scan: clean" in output |
+| No scanner installed | Warn. Proceed with manual review only. Recommend installing gitleaks. |
+
+### Dependency Vulnerability Scan
+
+Check for known vulnerabilities in project dependencies:
+
+```bash
+if [ -f "package-lock.json" ] || [ -f "yarn.lock" ] || [ -f "pnpm-lock.yaml" ]; then
+  if [ -f "pnpm-lock.yaml" ]; then pnpm audit --audit-level=critical 2>/dev/null
+  elif [ -f "yarn.lock" ]; then yarn audit --level critical 2>/dev/null
+  else npm audit --audit-level=critical 2>/dev/null
+  fi
+elif [ -f "Pipfile.lock" ] || [ -f "requirements.txt" ]; then
+  pip audit 2>/dev/null || echo "⚠ pip-audit not installed"
+elif [ -f "Cargo.lock" ]; then
+  cargo audit 2>/dev/null || echo "⚠ cargo-audit not installed"
+elif [ -f "go.sum" ]; then
+  govulncheck ./... 2>/dev/null || echo "⚠ govulncheck not installed"
+fi
+```
+
+| Audit result | Action |
+|--------------|--------|
+| Critical vulnerabilities | **STOP.** List CVEs. Do not ship with known critical vulns. |
+| High/medium vulnerabilities | Warn. List them. Proceed at user's discretion. |
+| Clean or tool unavailable | Continue. Note result in output. |
+
 ---
 
 ## Step 4: Version Bump
@@ -161,8 +212,7 @@ Read `VERSION` file. Auto-decide bump level based on diff size as a heuristic
 
 | Diff size | Bump |
 |-----------|------|
-| < 50 lines, trivial | MICRO (4th digit) |
-| 50+ lines, bug fixes, features | PATCH (3rd digit) |
+| Bug fixes, small features | PATCH — auto-decide |
 | Major feature / architecture | MINOR — **ask user** |
 | Milestone / breaking change | MAJOR — **ask user** |
 
@@ -182,7 +232,7 @@ git log $BASE..HEAD --oneline
 
 Categorize into: Added, Changed, Fixed, Removed.
 Insert after file header, dated today.
-Format: `## [X.Y.Z.W] - YYYY-MM-DD`
+Format: `## [X.Y.Z] - YYYY-MM-DD`
 
 ---
 
@@ -231,6 +281,12 @@ If TODOS.md has `### Feature:` sections with `#N` task IDs:
 
 Be conservative — only mark items when the diff and test results clearly show
 the work is done. "Should be done" is not evidence. Check the AC.
+
+### Clear Active Work
+
+If TODOS.md has an `## Active Work` section and this `/ship` completes the
+recipe chain (PR created successfully), remove the Active Work section.
+The recipe is done — no handoff needed.
 
 ---
 
@@ -289,7 +345,7 @@ Collect artifacts produced during this feature's lifecycle and archive them:
   on-disk reports (`.qa-reports/`, `.retro/`)
 - If no artifacts exist beyond commits, skip archival silently
 - Archive is for historical reference — never modify archived files after writing
-- Stage the `.history/` directory for commit
+- Do NOT stage `.history/` — keep as local-only reference (gitignored)
 
 This preserves the full decision chain: *why* we built it (spec), *how* we
 designed it (design/eng), *whether* it was reviewed (review), *whether* it
@@ -315,7 +371,7 @@ Group changes into logical commits. Each commit = one coherent change.
 - Only the final commit gets the co-author trailer:
 
 ```
-chore: bump version and changelog (vX.Y.Z.W)
+chore: bump version and changelog (vX.Y.Z)
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```

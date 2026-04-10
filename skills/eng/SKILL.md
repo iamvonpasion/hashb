@@ -32,7 +32,7 @@ gate only at decision points.
 
 ## Presentation Rules
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -79,6 +79,9 @@ Check for `/spec` and `/design` handoff summaries in the conversation context:
   constraints, assumptions. Read the full spec phases for detail.
 - **Design handoff** → screens, components, states, flows, accessibility requirements.
   Read the full design phases for wireframes and state machines.
+- **Design handoff compressed?** If the handoff contains only counts
+  (e.g., "3 new components") without the component enumeration, error scenario table,
+  or data flow matrix, warn before proceeding — implementation may be incomplete.
 
 If no upstream artifacts exist, gather requirements from the user directly.
 
@@ -131,12 +134,23 @@ use it to adapt review checks throughout all phases:
 Check `.retro/` for retro reports mentioning the affected codebase area.
 If recurring issues exist, flag them as known risks in Phase 0.
 
+Check Claude Code memories for relevant project/feedback memories from prior retros.
+Recurring patterns flagged by `/retro` should inform scope decisions and risk assessment.
+
 ### Gather Context
 
 ```bash
 git log --oneline -15
+# Branch/base detection — see skills/shared/preflight.md
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || echo "main")
+if command -v gh >/dev/null 2>&1; then
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
+    || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
+    || echo "main")
+else
+  echo "⚠ gh CLI not found — defaulting BASE to 'main'"
+  BASE="main"
+fi
 echo "BRANCH: $BRANCH  BASE: $BASE"
 git diff $(git merge-base HEAD $BASE)..HEAD --stat
 grep -r "TODO\|FIXME\|HACK" -l --exclude-dir={node_modules,vendor,.git,dist,build} . | head -20

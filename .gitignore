@@ -30,3 +30,6 @@ node_modules/
 # Binary artifacts
 *.pptx
 *.ppt
+
+# History archives (local reference only)
+.history/

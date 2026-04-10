@@ -15,7 +15,7 @@ When bugs are found, use `/fix` to address them, then re-run `/qa` to verify.
 
 ---
 
-See `skills/shared/formatting.md` for presentation rules (progress indicators, discussion chunking, table formatting).
+See `skills/shared/formatting.md` for formatting rules (tables, code blocks, output style, workflow discipline).
 
 ---
 
@@ -51,7 +51,15 @@ mkdir -p .qa-reports/screenshots
 **No URL + feature branch →** diff-aware mode:
 
 ```bash
-BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo "main")
+# Branch/base detection — see skills/shared/preflight.md
+if command -v gh >/dev/null 2>&1; then
+  BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null \
+    || gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null \
+    || echo "main")
+else
+  echo "⚠ gh CLI not found — defaulting BASE to 'main'"
+  BASE="main"
+fi
 git diff $BASE...HEAD --name-only
 git log $BASE..HEAD --oneline
 ```
@@ -248,4 +256,6 @@ fixed vs new issues, append comparison to report.
   screenshot so the user sees them inline.
 - **Never refuse to use the browser.** Even if changes look backend-only,
   open the browser and verify.
+- **Max 3 QA/fix cycles.** If issues persist after 3 rounds of `/qa` -> `/fix` -> `/qa`,
+  escalate to user. Infinite loops waste tokens and erode trust.
 

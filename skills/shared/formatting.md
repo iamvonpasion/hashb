@@ -5,39 +5,6 @@ duplicating formatting instructions.
 
 ---
 
-## Progress Indicator
-
-Every skill output starts with a progress bar showing phases:
-
-```
-/skill-name ════════════════════════════════════════════════════════
-
-  ▸ Phase 1  [name]       ~N min
-  ○ Phase 2  [name]       ~N min
-  ○ Phase 3  [name]       ~N min
-
-════════════════════════════════════════════════════════════════════
-```
-
-Update markers as phases progress:
-- `▸` current phase
-- `✓` completed (add status note, e.g., `✓ 3 findings`)
-- `○` pending
-- `—` skipped
-
----
-
-## Discussion Chunking
-
-When a follow-up response would be too dense to digest in one shot, present
-a numbered big-picture overview first, then discuss each point one at a time,
-waiting for user input between points.
-
-Use judgment: chunk whenever the response feels like a wall of text, not at
-a fixed threshold. Short responses don't need chunking.
-
----
-
 ## Tables
 
 - Tables must start at column 0 — never indent tables inside card blocks
@@ -74,3 +41,6 @@ After completing any skill that has a defined "Next Step" table:
   alternatives like "Want me to ship?"
 - The valid statement after implementation is: "Tests pass. Running /review."
   — not "Tests pass. Ready to ship?"
+- **Update Active Work on skill completion.** If TODOS.md has an `## Active Work`
+  section, update `Completed` and `Next` fields. If starting a new recipe chain
+  and no Active Work section exists, create one.

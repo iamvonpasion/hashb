@@ -555,3 +555,213 @@ Every action checks before modifying:
 ```
 Already compliant. {N} items verified, 0 changes needed.
 ```
+
+---
+
+## Phase 4: Guard Hook Templates
+
+### .claude/settings.json hook configuration
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/guard-check.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+> If `.claude/settings.json` already exists with other settings, merge the
+> `hooks` key into the existing file. Do not overwrite other settings.
+
+### .claude/hooks/guard-check.sh
+
+```bash
+#!/bin/bash
+# Guard hook — blocks destructive commands before execution.
+# Installed by /hashb:init. Edit patterns to match your project's needs.
+#
+# Exit codes:
+#   0 = allow (command is safe)
+#   2 = block (destructive pattern detected)
+
+INPUT=$(cat)
+CMD=$(echo "$INPUT" | jq -r '.tool_input.command')
+
+# Destructive patterns — add project-specific patterns below
+PATTERNS='rm -rf|DROP TABLE|DROP DATABASE|TRUNCATE|git push.*--force|git push.*-f|git reset --hard|kubectl delete|docker system prune'
+
+# Safe exceptions — build artifacts and caches
+SAFE_TARGETS='node_modules|\.next|dist|__pycache__|\.cache|build|\.turbo|coverage'
+
+# Check for destructive patterns
+if echo "$CMD" | grep -qE "$PATTERNS"; then
+  # Check if target is a safe exception
+  if echo "$CMD" | grep -qE "$SAFE_TARGETS"; then
+    exit 0
+  fi
+  echo "BLOCKED: Destructive command detected: $CMD" >&2
+  exit 2
+fi
+
+exit 0
+```
+
+> Make the script executable: `chmod +x .claude/hooks/guard-check.sh`
+> On Windows, the script runs via Git Bash (Claude Code's default shell).
+
+### Post-Compaction Context Hook
+
+Re-inject active work context after context compaction so Claude doesn't
+lose track of the current recipe position.
+
+Add to `.claude/settings.json` (merge into existing hooks):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f TODOS.md ]; then grep -A 20 '## Active Work' TODOS.md 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This outputs the Active Work section into Claude's context after every
+compaction, ensuring recipe position and key decisions survive.
+
+---
+
+## Phase 4: CI Template Scaffolding
+
+### GitHub Actions — Node/TypeScript
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npm test --if-present
+      - run: npm run build --if-present
+```
+
+### GitHub Actions — Python
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: ruff check . || true
+      - run: pytest
+```
+
+### GitHub Actions — .NET
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - run: dotnet build --no-restore
+      - run: dotnet format --verify-no-changes --no-restore
+      - run: dotnet test --no-build
+```
+
+### GitHub Actions — Go
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go build ./...
+      - run: golangci-lint run || true
+      - run: go test ./...
+```
+
+### GitHub Actions — Rust
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
+```
+
+> **Template selection:** Match the template to the detected Stack from
+> the Project Profile. If no match, use the Node template as default or
+> ask the user to customize.
