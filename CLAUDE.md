@@ -73,6 +73,7 @@ Skills use sensible defaults when other fields are missing.
 ## Skill Routing
 When user intent matches a skill, invoke it instead of acting freestyle:
 - Map architecture, "understand this codebase", brownfield, onboarding, "new to this repo" → `/hashb:understand`
+- Data schema, entity relationships, "how is X connected to Y", structural questions → `/hashb:explore` or `/hashb:understand`
 - Explore, "not sure yet", "let me think", investigate → `/hashb:explore`
 - Quick plan, "just plan this", fast, lightweight, small task → `/hashb:quick`
 - Requirements, specs, "what should we build" → `/hashb:spec`

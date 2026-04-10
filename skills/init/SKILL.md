@@ -322,6 +322,26 @@ If installed but not in MCP Servers: recommend adding it. Provide the config sni
 > "Graphify is installed. Adding it as an MCP server enables graph-accelerated
 > analysis in `/understand`, `/review`, and `/audit`."
 
+### Graphify CLAUDE.md Section
+
+If graphify is installed AND `graphify-out/` exists (graph already built),
+scaffold a `## graphify` section in the consumer's CLAUDE.md:
+
+```markdown
+## graphify
+
+Graph available at `graphify-out/`. For structural questions (architecture,
+schemas, dependencies, connections), query graph MCP tools before exploring
+raw files. See skill docs for tool reference.
+```
+
+This section establishes the query-first behavioral rule. Keep it short —
+CLAUDE.md survives compaction (rule E5), so every token is loaded every session.
+MCP tool reference tables belong in the skills, not here.
+
+If `graphify-out/` does not exist, skip this section — only recommend adding
+graphify to MCP Servers (see above).
+
 See `references.md` for the full per-field walkthrough scripts and MCP server
 suggestion table.
 

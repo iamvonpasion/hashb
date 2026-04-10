@@ -77,6 +77,23 @@ ls docs/ specs/ .retro/ .history/ TODOS.md 2>/dev/null
 
 Read relevant files if they exist — prior context shapes better exploration.
 
+### Check for Graphify MCP
+
+See `skills/shared/graphify-preflight.md` for detection steps.
+
+If code-review-graph MCP tools are available (`graph-available` mode), use them
+as the **primary tool** for structural questions before reading raw files:
+
+- "How does X work?" / "What depends on X?" — `get_neighbors`
+- "How are X and Y connected?" — `shortest_path`
+- "What are the main abstractions?" — `god_nodes`
+- "What's in this area?" / "Data schema?" — `query_graph` or `get_community`
+
+After graph queries, read 2-3 key files to add depth the graph cannot capture
+(business logic, comments, configuration). Graph gives structure; files give detail.
+
+If graphify is not available, proceed with standard file reads — no hard dependency.
+
 ---
 
 ## Exploration Styles
