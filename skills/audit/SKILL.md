@@ -291,6 +291,40 @@ find . -maxdepth 3 -name "*.md" \
 | Formatting config exists | {yes / no} | .editorconfig / .prettierrc / eslint / etc. |
 | HASHB.md (getting started) | {yes / no} | Team workflow guide |
 
+### 1F. Tooling & Graph Intelligence
+
+Check whether structural analysis tools are available. These are informational
+findings (not compliance failures) — recommended tooling that enhances skill
+effectiveness.
+
+```bash
+# Graphify installation
+python -c "import graphify; print('installed')" 2>/dev/null || echo "not installed"
+
+# Architecture map from /understand
+ls .understand/architecture-map.md 2>/dev/null
+
+# Count source files for recommendation threshold
+find . -maxdepth 4 -type f \( -name "*.ts" -o -name "*.js" -o -name "*.py" \
+  -o -name "*.go" -o -name "*.rs" -o -name "*.java" -o -name "*.cs" \) \
+  -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null | wc -l
+```
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Graphify installed | {yes / no} | {if no + 50+ source files: RECOMMENDED} |
+| Graphify MCP configured | {yes / no / n/a} | {if installed but not configured: RECOMMENDED} |
+| Architecture map exists | {yes / no} | {if no: suggest `/understand` for brownfield repos} |
+| code-review-graph MCP | {configured / not configured} | {existing check — included for completeness} |
+
+**Recommendation thresholds:**
+
+| Condition | Finding |
+|-----------|---------|
+| 50+ source files, no graphify | INFO: "Consider installing graphify (`pip install graphifyy`) for graph-accelerated analysis in `/understand`, `/review`, `/audit`." |
+| Graphify installed, MCP not configured | INFO: "Graphify is installed but not exposed as MCP server. Run `/graphify . --mcp` to build the graph, then add to MCP config." |
+| Brownfield repo, no architecture map | INFO: "No `.understand/architecture-map.md` found. Run `/understand` to map the architecture before further analysis." |
+
 ---
 
 ## Phase 2: Rule-by-Rule Scan

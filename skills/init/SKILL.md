@@ -90,7 +90,8 @@ See `skills/shared/formatting.md` for formatting rules (tables, code blocks, out
 ## Phase 0: Assess Current State
 
 Detect what already exists. If `/audit` was run previously in the conversation,
-consume its report to prioritize actions.
+consume its report to prioritize actions. If `/understand` was run, consume
+`.understand/architecture-map.md` to pre-populate Profile fields and domain boundaries.
 
 ```bash
 # What exists?
@@ -103,7 +104,24 @@ ls package.json requirements.txt Pipfile pyproject.toml go.mod Cargo.toml \
 
 # Read existing CLAUDE.md if present
 cat CLAUDE.md 2>/dev/null | head -100
+
+# Architecture map from /understand (if run previously)
+ls .understand/architecture-map.md 2>/dev/null
+
+# Count source directories for complexity check
+ls -d src/*/ app/*/ lib/*/ modules/*/ services/*/ packages/*/ 2>/dev/null | wc -l
 ```
+
+### Complexity Check
+
+If the repo has 5+ top-level source directories and no `.understand/architecture-map.md`
+exists, suggest running `/understand` first:
+
+> "This looks like a complex codebase with {N} source directories. Consider running
+> `/understand` first to map the architecture — the findings will pre-populate
+> Architecture, domain boundaries, and other Profile fields here."
+
+This is a suggestion, not a gate. If the user wants to proceed, continue normally.
 
 Present assessment in table format:
 
@@ -266,6 +284,43 @@ Auto-detect where possible, then confirm with the user. Fields that cannot be
 reliably auto-detected (Architecture, Tenancy, Audience, Deploy) must always be
 asked. Field 9 (MCP Servers) requires Context7 — walk through installation if
 needed.
+
+### Architecture Map Integration
+
+If `.understand/architecture-map.md` exists, read it and use findings to
+pre-populate suggestions for fields that normally require asking:
+
+| Field | How architecture map helps |
+|-------|--------------------------|
+| Architecture | Use Module Boundaries + Data Flow to suggest (e.g., "modular monolith with 5 domains") |
+| Tenancy | Check Conventions Detected for tenant scoping patterns |
+| MCP Servers | If graphify was used in the map, recommend adding it as MCP server |
+
+Present these as evidence-backed suggestions, not assumptions. User still confirms.
+
+### Graphify MCP Recommendation
+
+During the MCP Servers walkthrough, check if graphify is installed:
+
+```bash
+python -c "import graphify; print('installed')" 2>/dev/null || echo "not installed"
+```
+
+If installed but not in MCP Servers: recommend adding it. Provide the config snippet:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "python",
+      "args": ["-m", "graphify.serve", "/absolute/path/to/graphify-out/graph.json"]
+    }
+  }
+}
+```
+
+> "Graphify is installed. Adding it as an MCP server enables graph-accelerated
+> analysis in `/understand`, `/review`, and `/audit`."
 
 See `references.md` for the full per-field walkthrough scripts and MCP server
 suggestion table.

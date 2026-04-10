@@ -234,3 +234,42 @@ task complete. No other state is needed.
 **Transitions:** `/explore` suggests next steps but never forces them.
 The user decides when to move from exploration to action.
 
+---
+
+## Recipe: Brownfield Onboarding
+
+**Purpose:** Understand an existing codebase, bootstrap hashb, and verify compliance.
+
+```
+/understand → /init → /audit → [feature work]
+```
+
+| Phase | Skill | What happens | Gate |
+|-------|-------|-------------|------|
+| 1 | `/understand` | Map architecture, module boundaries, data flows, conventions. Produces `.understand/architecture-map.md` | User validates architecture map |
+| 2 | `/init` | Bootstrap hashb — consumes architecture map to pre-populate Profile fields and domain boundaries | User approves scaffolding |
+| 3 | `/audit` | Verify compliance with architecture-aware context | Review findings |
+| 4 | Varies | Feature work, bugfixes, or further exploration | — |
+
+**Use when:**
+- Adopting hashb on an existing codebase
+- Joining a project for the first time
+- Onboarding a new team member to an unfamiliar repo
+- Before major refactoring of a legacy system
+
+**Example:**
+```
+/understand
+# → produces architecture map, validates with user
+# → auto-proceeds to /init (architecture context feeds Profile)
+/init
+# → scaffolds rules using detected domain boundaries
+/audit
+# → verifies compliance, flags remaining gaps
+```
+
+**Tips:**
+- If graphify is installed, run `/graphify . --mcp` before `/understand` for graph-accelerated analysis.
+- For very large codebases, scope `/understand` to a subsystem first: `/understand src/billing/`.
+- If hashb is already set up, skip `/init` and go straight to `/audit`.
+

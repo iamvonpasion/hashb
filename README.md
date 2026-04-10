@@ -58,6 +58,7 @@ Every skill enforces discipline that AI tends to skip:
 
 | Skill | What it does | Writes code? |
 |-------|-------------|:------------:|
+| `understand` | Systematic codebase mapping — architecture, boundaries, flows, conventions | * |
 | `spec` | Product specification — discovery, requirements, acceptance criteria, task decomposition | * |
 | `quick` | Quick planning — single-response, no ceremony, auto-detects intent | |
 | `design` | UX/UI design — wireframes, components, interactions, accessibility | |

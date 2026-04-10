@@ -10,6 +10,7 @@ AI-assisted development toolkit.
 
 | Skill | Purpose | Modifies code? |
 |-------|---------|----------------|
+| `understand` | Systematic codebase mapping — architecture, boundaries, flows, conventions. Produces `.understand/architecture-map.md` | No* |
 | `explore` | Unstructured exploration — think through ideas, investigate codebase, compare approaches before committing to a plan | No |
 | `quick` | Quick planning — single-response plans, no ceremony, auto-detects intent or explicit mode | No |
 | `spec` | Product specification — problem discovery, requirements, acceptance criteria, task decomposition, persistent spec registry with delta specs | No* |
@@ -71,7 +72,8 @@ Skills use sensible defaults when other fields are missing.
 ```markdown
 ## Skill Routing
 When user intent matches a skill, invoke it instead of acting freestyle:
-- Explore, "not sure yet", "let me think", investigate, understand codebase → `/hashb:explore`
+- Map architecture, "understand this codebase", brownfield, onboarding, "new to this repo" → `/hashb:understand`
+- Explore, "not sure yet", "let me think", investigate → `/hashb:explore`
 - Quick plan, "just plan this", fast, lightweight, small task → `/hashb:quick`
 - Requirements, specs, "what should we build" → `/hashb:spec`
 - Break down large feature, task breakdown, "too big for one session" → `/hashb:spec decompose`

@@ -33,3 +33,6 @@ node_modules/
 
 # History archives (local reference only)
 .history/
+
+# Understand artifacts (generated)
+.understand/
