@@ -41,3 +41,6 @@ After completing any skill that has a defined "Next Step" table:
   alternatives like "Want me to ship?"
 - The valid statement after implementation is: "Tests pass. Running /review."
   — not "Tests pass. Ready to ship?"
+- **Update Active Work on skill completion.** If TODOS.md has an `## Active Work`
+  section, update `Completed` and `Next` fields. If starting a new recipe chain
+  and no Active Work section exists, create one.

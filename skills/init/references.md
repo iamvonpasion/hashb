@@ -619,6 +619,34 @@ exit 0
 > Make the script executable: `chmod +x .claude/hooks/guard-check.sh`
 > On Windows, the script runs via Git Bash (Claude Code's default shell).
 
+### Post-Compaction Context Hook
+
+Re-inject active work context after context compaction so Claude doesn't
+lose track of the current recipe position.
+
+Add to `.claude/settings.json` (merge into existing hooks):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f TODOS.md ]; then grep -A 20 '## Active Work' TODOS.md 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This outputs the Active Work section into Claude's context after every
+compaction, ensuring recipe position and key decisions survive.
+
 ---
 
 ## Phase 4: CI Template Scaffolding

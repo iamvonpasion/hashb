@@ -74,6 +74,33 @@ When `/ship` completes a decomposed task, mark it with:
 - Keep completed tasks in TODOS.md until the feature is fully done (all tasks `[x]`),
   then follow the standard retention rule (one release cycle)
 
+### Active Work (session handoff)
+
+When a recipe chain is in progress, maintain an `## Active Work` section at the
+top of TODOS.md. Skills update this as they complete. Next session reads it to
+resume.
+
+```markdown
+## Active Work
+
+- **Branch:** feature/notification-prefs
+- **Recipe:** Feature (spec → design → eng → tdd → review → qa → ship → retro)
+- **Completed:** /spec, /eng
+- **Current:** /tdd (cycle 2/5 — see .tdd-checkpoint-*)
+- **Next:** /review
+- **Key decisions:**
+  - Using WebSocket for real-time (ADR-001)
+  - Deferred push notifications to task #3
+- **Blocked:** nothing
+```
+
+**Rules:**
+- Only ONE active work section at a time (one active recipe per TODOS.md)
+- `/ship` clears the Active Work section on successful PR creation
+- `/retro` clears it after writing the retro report
+- If no active recipe, omit the section entirely
+- Active Work is a handoff aid, not a formal artifact — keep it terse
+
 ## General Markdown
 
 - Use ATX headings (`#`), not Setext (underline)

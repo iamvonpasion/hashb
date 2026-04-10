@@ -433,6 +433,11 @@ guard script content.
 > Guard hooks are recommended for production repos. Frame as opt-in but
 > strongly recommended during the init walkthrough.
 
+Also scaffold the **post-compaction context hook** — a `SessionStart` hook
+with `compact` matcher that re-injects the Active Work section from TODOS.md
+after context compaction. This ensures recipe position and key decisions
+survive compaction. See `references.md` for the hook template.
+
 ### CI/CD Pipeline
 
 If no CI configuration is detected, scaffold a starter pipeline based on the

@@ -281,6 +281,9 @@ LEARNINGS PERSISTED
   Skipped: {N findings not significant enough to persist}
 ```
 
+If TODOS.md has an `## Active Work` section, remove it. The recipe chain
+is complete — retro is the last step.
+
 ---
 
 ## Phase 5: Apply (Optional — User Decides)

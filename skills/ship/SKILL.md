@@ -282,6 +282,12 @@ If TODOS.md has `### Feature:` sections with `#N` task IDs:
 Be conservative — only mark items when the diff and test results clearly show
 the work is done. "Should be done" is not evidence. Check the AC.
 
+### Clear Active Work
+
+If TODOS.md has an `## Active Work` section and this `/ship` completes the
+recipe chain (PR created successfully), remove the Active Work section.
+The recipe is done — no handoff needed.
+
 ---
 
 ## Step 5.7: Merge Delta Specs
