@@ -29,6 +29,8 @@ One skill, adaptive phases. Stream output continuously — gate only at decision
 | Large feature, needs breakdown into manageable tasks | `/spec decompose` |
 | "This is too big for one session" | `/spec decompose` |
 
+**Skip when:** Single-line fix, typo correction, config change, or task where requirements are already unambiguous and documented. Use `/quick` for lightweight planning or `/eng` directly if the "what" is clear and only the "how" needs planning.
+
 ---
 
 ## Presentation Rules
@@ -730,3 +732,16 @@ when they need detail.
 | High-level first | Summary table before expanding into detail |
 | Tables over walls of text | Tables for structured data. Prose only for context |
 | Complexity routing | Small tasks get single-pass output. Large tasks get full flow. Match depth to scope |
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "We know what to build — skip the spec" | Skipping specs front-loads ambiguity into implementation. Every unclear requirement becomes a guess in code that gets discovered during review. |
+| "The requirements are obvious" | "Obvious" requirements produce the most scope creep. Explicit out-of-scope lists prevent 80% of mid-build surprises. |
+| "Writing acceptance criteria is overhead" | Untestable requirements produce untestable code. If you can't write the AC, you don't understand the requirement yet. |
+| "This is too small for discovery" | Small features with unclear problem spaces produce the most rework. Even a 5-minute discovery check saves hours of building the wrong thing. |
+| "Everything is P1 priority" | If everything is P1, nothing is. Prioritization forces the hard trade-offs that make shipping possible. |
+| "We'll figure out edge cases during implementation" | Edge cases discovered during implementation are 5x more expensive to handle than edge cases identified during spec. |

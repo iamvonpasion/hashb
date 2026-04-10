@@ -452,6 +452,19 @@ Final output: PR URL + CI status line.
 
 ---
 
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "Tests passed locally, CI will be fine" | Local and CI environments differ. Dependency versions, OS, env vars, and integration points all diverge. Check CI status before declaring done. |
+| "The lint warnings are minor, I'll skip them" | Lint failures in CI block the PR anyway. Fix them now — skipping creates a second pass that costs more than fixing in-flow. |
+| "I'll split the commits later / squash fixes the history" | Squashing destroys the development narrative. Write clean atomic commits now — it's cheaper than post-hoc rewriting. |
+| "This doesn't need a review — it's just a small fix" | Small changes introduce security vulnerabilities, break API contracts, or violate data integrity. The `/review → /qa → /ship` chain exists for a reason. |
+| "Version bump isn't needed for this change" | If the code changed, the version changed. Skipping bumps makes releases untrackable and rollbacks impossible. |
+| "I'll update the CHANGELOG manually later" | Later means never. Auto-generate now from commits — that's why commit messages follow conventions. |
+
+---
+
 ## Rules
 
 - **Never skip build.** If the project has a build step, it must pass.

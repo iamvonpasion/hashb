@@ -548,3 +548,15 @@ the full idempotency rules table.
   does and why it's needed.
 - **Respect the consumer's choices.** If they decline an override or rule scaffold,
   accept it. Don't re-suggest in the same session.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "We don't need a Project Profile — our stack is obvious" | Skills read the Profile to adapt behavior. Without it, every skill guesses at your stack, testing framework, and deploy target. 5 minutes of setup saves hours of misaligned output. |
+| "Rules are overkill for a small project" | Rules auto-activate when matching files are read. They don't cost tokens when they don't match. Even small projects benefit from security and testing rules. |
+| "We'll set up CLAUDE.md manually later" | Manual setup misses auto-detection, MCP server configuration, and rule scaffolding. `/init` in 10 minutes does what manual setup takes an hour to replicate. |
+| "Our existing docs are fine — skip the stray doc check" | Stray docs that predate hashb create conflicting guidance. A quick scan finds overlaps that confuse both agents and humans. |
+| "We don't need .claudeignore" | Without it, Claude reads node_modules, build output, lock files, and .env secrets. The context window fills with noise instead of signal. |

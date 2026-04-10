@@ -488,3 +488,15 @@ block. See `references.md` for the INIT ACTIONS output format.
   General quality is `/review`'s job.
 - **Never refuse a category.** If a rule category doesn't apply, mark it N/A
   with a reason. Don't silently skip it.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "The repo is small — it doesn't need an audit" | Small repos accumulate compliance debt fastest because nobody's watching. An early audit prevents drift before it compounds. |
+| "We just ran /init — everything should be compliant" | `/init` scaffolds structure; it doesn't verify usage. Code written after `/init` can violate every rule it set up. |
+| "Sampling 5-10 files isn't representative" | Strategic sampling catches systemic patterns. If 3 of 5 sampled files violate a rule, the violation is likely repo-wide. |
+| "The score doesn't matter — we know our weak spots" | Quantified scores track improvement over time. "We know" is unfalsifiable; a score is evidence. |
+| "Some categories don't apply to us" | Mark them N/A with a reason. Silently skipping categories is how compliance gaps hide. |

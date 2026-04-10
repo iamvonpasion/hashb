@@ -24,6 +24,8 @@ This is NOT engineering review (`/eng`) — this reviews actual code that has be
 | Testing the running app | `/qa` |
 | Pre-landing security/data check | `/ship` (built-in) |
 
+**Skip when:** No code changes to review (doc-only changes, config-only changes), or the change is a single-line typo fix where `/ship`'s pre-landing check is sufficient.
+
 `/review` fills the gap between `/eng` (engineering plan) and `/qa` (behavior).
 It catches design drift, quality issues, and architectural violations
 that tests won't find and QA can't see.
@@ -323,6 +325,19 @@ If blockers remain after 2 rounds, escalate to user with full context.
 - No conversation history from the implementing agent
 
 This prevents confirmation bias — the reviewer forms independent conclusions.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "The tests pass, so the code is fine" | Tests verify behavior, not design. Passing tests don't catch architectural violations, security holes, or maintainability problems. |
+| "I'll just do a quick scan" | A quick scan is not a review. Work the checklist — shortcuts here become production incidents later. |
+| "This change is too small to review seriously" | Small changes can introduce security vulnerabilities, break API contracts, or violate data integrity. Size doesn't determine risk. |
+| "The author knows this area better than I do" | That's confirmation bias. Review the code independently — the author's familiarity can blind them to assumptions that break for others. |
+| "Marking it APPROVED WITH NOTES — they'll fix the warnings later" | "Later" means "never." If the warning matters enough to note, it matters enough to fix before merge. |
+| "I'm not confident enough to block this" | LOW confidence is valuable signal. ESCALATE is the right call — a false APPROVED is worse than an honest "I'm not sure." |
 
 ---
 

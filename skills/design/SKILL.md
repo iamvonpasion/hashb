@@ -393,3 +393,15 @@ Output: findings in the same format as `/review` (BLOCKING / WARNING / SUGGESTIO
 | Responsive in Phase 1 table | Breakpoint behavior defined per screen in the table. ASCII breakpoint wireframes only on request |
 | Respect Project Profile | Adapt component expectations to the declared framework |
 | Complexity routing | Small features get single-pass output. Large features get full flow. Match depth to scope |
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "We'll handle the empty/error/loading states later" | States not designed are states not implemented. Users hit empty and error states more often than the happy path — design them first. |
+| "Accessibility can be added after launch" | Retroactive accessibility is 10x harder. Focus management, keyboard nav, and contrast ratios shape layout decisions — they're not a layer you bolt on. |
+| "This screen is straightforward, no wireframe needed" | Wireframes expose content hierarchy, responsive behavior, and component reuse before a line of code is written. Skipping them means discovering layout problems during implementation. |
+| "Mobile can wait — desktop first" | Responsive behavior affects layout structure. Deciding breakpoint behavior after building desktop creates rewrite, not adaptation. |
+| "I'll just use the default component" | Default components produce generic-looking UI. Check existing design patterns first — consistency with the existing design system matters more than speed. |

@@ -235,8 +235,11 @@ fi
 
 3. **Fix the root cause from the 5 Whys chain, not the symptom.** Smallest
    change that eliminates the actual problem at the deepest actionable level.
-   Minimal diff — fewest files, fewest lines. Resist refactoring adjacent
-   code during a bug fix.
+   Minimal diff — fewest files, fewest lines.
+   **Scope discipline:** Touch only what the bug requires. Do not clean up
+   adjacent code, refactor unrelated imports, fix formatting in files you're
+   reading, or add features. A bug fix diff should contain the regression
+   test and the fix — nothing else. Note improvement opportunities for later.
 
 4. **GREEN: Run the test again. It MUST pass.** Paste the passing output.
    This is the proof the fix works. Without RED then GREEN on the same test,
@@ -293,6 +296,20 @@ this works" without evidence is not acceptable — confidence is not proof.
 - DONE → auto-proceed to `/review` if this is the first fix, or `/qa` if already reviewed
 - DONE_WITH_CONCERNS → auto-proceed to `/qa` with concerns flagged
 - BLOCKED → stop the chain, present investigation to user
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "I can see the fix, let me just apply it" | Seeing a fix is not the same as understanding the cause. A symptom fix creates a new bug later in the same area. |
+| "The root cause is obvious" | If it were obvious, it wouldn't be a bug. Trace the full code path — "obvious" fixes are the #1 source of whack-a-mole debugging. |
+| "Writing a regression test first wastes time" | The regression test is your proof that the bug existed and is now fixed. Without it, the same bug returns in 3 months. |
+| "This is a one-off issue, not worth deep investigation" | Recurring bugs in the same area are an architectural smell. The 5-Whys often reveals a deeper problem worth fixing properly. |
+| "I'll clean up the surrounding code while I'm here" | Scope creep during a fix makes the diff unreadable and hides the actual fix. Fix the bug, nothing else. |
+| "The 3-strike rule doesn't apply — I'm close" | If three hypotheses failed, your mental model of the code is wrong. Stop, re-read, gather more evidence. |
+| "I can't reproduce it, but I know what's wrong" | A fix you can't verify is a guess. If you can't reproduce, gather more evidence or instrument the code. |
 
 ---
 

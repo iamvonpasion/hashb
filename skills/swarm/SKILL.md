@@ -296,3 +296,15 @@ MERGE PROGRESS ─────────────────────�
 - **Merge one at a time.** Build, lint, and test between each merge.
 - **Cross-stream contracts validated.** If streams share boundaries, verify contracts match.
 - **No nested swarms.** One level of decomposition only.
+
+---
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|-----------------|---------|
+| "Everything should be parallelized for speed" | Parallel streams with shared files create merge conflicts and integration bugs. Only swarm when streams are truly independent. |
+| "We can sort out the merge conflicts later" | Merge conflicts after parallel development are 3-5x harder to resolve than sequential conflicts. If streams share files, they belong in the same stream. |
+| "Stream reviews are unnecessary — we'll review the merged result" | Per-stream reviews catch stream-specific issues before they compound during integration. The integrated review checks cross-cutting concerns. Both are needed. |
+| "The prerequisites can be done in parallel with streams" | Streams depend on prerequisites. Building on an unstable foundation means rebuilding when the prerequisite changes. Prerequisites first, always. |
+| "This small overlap between streams is fine" | "Small" file overlaps become merge conflict nightmares. If two streams touch the same file, merge them into one stream or extract the shared code as a prerequisite. |
