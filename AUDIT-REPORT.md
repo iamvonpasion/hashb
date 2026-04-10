@@ -1,19 +1,22 @@
 # hashb Comprehensive Audit Report
 
 **Date:** 2026-04-10
+**Version:** 2.0 (revised — incorporates 4 parallel research agents + web research)
 **Auditor:** Claude Opus 4.6 (autonomous, no human pre-screening)
 **Scope:** Full repo — 16 skills, 8 rules, recipes, plugin config, shared files
-**Method:** Every file read. Every finding verified against source. No sampling.
+**Method:** Every file read. Every finding verified against source. Hooks API, Superpowers, OpenSpec, GSD researched via web. Token estimates use byte counts (`wc -c`) / 4, not line heuristics.
 
 ---
 
 ## 1. Executive Summary
 
-**Overall Score: 74/100 (Good)**
+**Overall Score: 73/100 (Good)**
 
 hashb is a well-architected AI workflow toolkit that brings real engineering discipline to Claude Code. The skill-based design, TDD enforcement, evidence-first debugging, and confidence-scored reviews represent genuine advances over freestyle AI coding. The system is coherent — skills reference each other consistently, recipes chain logically, and rules activate contextually.
 
-However, the implementation contradicts its own principles in several measurable ways. The toolkit preaches token efficiency but loads 300-1000+ lines per skill invocation. It advocates for enforceable safety but relies entirely on advisory instructions. It defines a 150-line rule for splitting files, then exceeds it in 14 of 16 skills. These are not nitpicks — they're the kind of inconsistencies that erode credibility under expert scrutiny.
+However, the implementation contradicts its own principles in several measurable ways. The toolkit preaches token efficiency but loads 2,800-10,100 tokens per skill invocation. It advocates for enforceable safety but relies entirely on advisory instructions — never using Claude Code's hooks API, which supports `PreToolUse` interception with `exit 2` blocking. It defines a 150-line rule for splitting files, then exceeds it in all 16 skills. These aren't nitpicks — they're the inconsistencies that erode credibility under expert scrutiny.
+
+Compared to Superpowers (93K+ stars, 14 skills), hashb covers more SDLC phases (16 vs 14 skills) and has a more sophisticated spec system (delta specs, decompose). But Superpowers enforces harder — it deletes code written before tests and uses hooks for mandatory enforcement. hashb's enforcement is advisory only.
 
 ### Top 5 Strengths
 
@@ -23,202 +26,219 @@ However, the implementation contradicts its own principles in several measurable
 4. **Confidence-scored review.** `/review`'s scoring system with ESCALATE -> human threshold prevents the AI from silently approving uncertain code.
 5. **On-demand loading architecture.** The `paths:` frontmatter system (context.md:D1-D3) is genuinely token-efficient for rules. Skills load only on invocation. CLAUDE.md stays lean at 117 lines.
 
-### Top 10 Issues
+### Top 12 Issues
 
 | # | Issue | Severity | Dimension |
 |---|-------|----------|-----------|
 | 1 | Skill files massively exceed own 150-line rule | HIGH | A: Token |
-| 2 | Guard rules advisory-only, not enforced via hooks | HIGH | B: Agent / F: Security |
+| 2 | Guard rules advisory-only — never uses Claude Code hooks API | CRITICAL | B: Agent / F: Security |
 | 3 | Branch/base detection bash block duplicated in 7 skills | HIGH | B: Agent / E: Quality |
 | 4 | Security rule covers only 4 file extensions (.ts, .tsx, .cs, .py) | HIGH | D: Missing / F: Security |
 | 5 | `.history/` archival not in .gitignore — bloats consumer repos | HIGH | E: Quality |
 | 6 | Ship uses 4-digit MICRO versioning; versioning rule uses standard semver | MEDIUM | C: Coherence |
 | 7 | plugin.json says "15 skills" — actual count is 16 | MEDIUM | E: Quality |
-| 8 | 3-strike rule state tracked in conversation context, lost on compaction | MEDIUM | B: Agent |
+| 8 | 3-strike rule + TDD checkpoint state tracked in context only, lost on compaction | MEDIUM | B: Agent |
 | 9 | No error recovery / resume mechanism across skills | MEDIUM | D: Missing |
-| 10 | formatting.md loaded by 14/16 skills — token overhead for presentation | MEDIUM | A: Token |
+| 10 | QA/Fix loop has no termination criteria (review has max 2 cycles, QA has none) | MEDIUM | C: Coherence |
+| 11 | Design -> Eng handoff too compressed — component list, error UX lost cross-skill | MEDIUM | C: Coherence |
+| 12 | Windows bash failures: `tr`, `awk`, `head -c` in fix/SKILL.md:194, tdd/SKILL.md:76 | MEDIUM | B: Agent |
 
 ---
 
 ## 2. Dimension A: Token & Context Efficiency
 
-**Score: 62/100**
+**Score: 58/100**
 
 ### Per-Skill Token Budget
 
-Estimated tokens: ~15 tokens/line (60 chars/line avg, 4 chars/token).
+Token estimates: byte count (`wc -c`) / 4 (Claude tokenizer averages ~4 bytes per token).
 
-| Skill | SKILL.md lines | Ref lines | Total lines | Est. tokens | Violates D4? |
-|-------|---------------|-----------|-------------|-------------|:------------:|
-| spec | 732 | 0 | 732 | ~10,980 | YES |
-| init | 511 | 557 | 1,068 | ~16,020 | YES |
-| eng | 542 | 286 | 828 | ~12,420 | YES |
-| audit | 490 | 189 | 679 | ~10,185 | YES |
-| docs | 451 | 0 | 451 | ~6,765 | YES |
-| ship | 409 | 0 | 409 | ~6,135 | YES |
-| design | 375 | 128 | 503 | ~7,545 | YES |
-| review | 336 | 0 | 336 | ~5,040 | YES |
-| retro | 318 | 0 | 318 | ~4,770 | YES |
-| research | 313 | 0 | 313 | ~4,695 | YES |
-| swarm | 298 | 0 | 298 | ~4,470 | YES |
-| fix | 296 | 0 | 296 | ~4,440 | YES |
-| quick | 251 | 0 | 251 | ~3,765 | YES |
-| qa | 251 | 0 | 251 | ~3,765 | YES |
-| tdd | 248 | 0 | 248 | ~3,720 | YES |
-| explore | 188 | 0 | 188 | ~2,820 | YES |
+| Skill | SKILL.md bytes | Ref bytes | Total bytes | Est. tokens | Violates D4 (>150 lines)? |
+|-------|---------------|-----------|-------------|-------------|:------------------------:|
+| spec | 28,375 | 0 | 28,375 | ~7,094 | YES (732 lines) |
+| init | 21,589 | 18,813 | 40,402 | ~10,101 | YES (511+557 lines) |
+| eng | 24,398 | 11,725 | 36,123 | ~9,031 | YES (542+286 lines) |
+| audit | 20,062 | 7,922 | 27,984 | ~6,996 | YES (490+189 lines) |
+| docs | 17,981 | 0 | 17,981 | ~4,495 | YES (451 lines) |
+| ship | 13,203 | 0 | 13,203 | ~3,301 | YES (409 lines) |
+| design | 15,658 | 9,879 | 25,537 | ~6,384 | YES (375+128 lines) |
+| review | 14,572 | 0 | 14,572 | ~3,643 | YES (336 lines) |
+| swarm | 13,922 | 0 | 13,922 | ~3,481 | YES (298 lines) |
+| retro | 11,209 | 0 | 11,209 | ~2,802 | YES (318 lines) |
+| research | 12,640 | 0 | 12,640 | ~3,160 | YES (313 lines) |
+| fix | 11,968 | 0 | 11,968 | ~2,992 | YES (296 lines) |
+| quick | 10,174 | 0 | 10,174 | ~2,544 | YES (251 lines) |
+| qa | 7,779 | 0 | 7,779 | ~1,945 | YES (251 lines) |
+| tdd | 7,826 | 0 | 7,826 | ~1,957 | YES (248 lines) |
+| explore | 5,850 | 0 | 5,850 | ~1,463 | YES (188 lines) |
 
-**Total skill content:** 7,669 lines across all skills (~115K tokens)
+**Total skill content:** 294,231 bytes (~73,558 tokens across all skills)
 
 ### Overhead per invocation
 
-Every skill invocation loads (approximately):
-- CLAUDE.md: 117 lines (~1,755 tokens)
-- SKILL.md: 188-732 lines (~2,820-10,980 tokens)
-- formatting.md: 76 lines (~1,140 tokens) — loaded by 14/16 skills
-- Reference files: 0-557 lines (varies)
+Every skill invocation loads:
+- CLAUDE.md: 6,178 bytes (~1,545 tokens)
+- SKILL.md: 5,850-28,375 bytes (~1,463-7,094 tokens)
+- formatting.md: 2,508 bytes (~627 tokens) — loaded by 14/16 skills
+- Reference files: 0-18,813 bytes (varies)
 - Active rules (via `paths:` matches): variable
 
-**Median skill invocation:** ~7,500 tokens of prompt context
-**Heaviest invocation (/init):** ~18,915 tokens
+**Median skill invocation:** ~5,200 tokens of prompt context
+**Heaviest invocation (/init):** ~12,273 tokens
+
+### Feature Recipe Context Load
+
+Full Feature recipe cumulative skill content (byte-based):
+
+| Skill | Est. tokens | Cumulative |
+|-------|-------------|------------|
+| /spec | 7,094 | 7,094 |
+| /design | 6,384 | 13,478 |
+| /eng | 9,031 | 22,509 |
+| /tdd | 1,957 | 24,466 |
+| /review | 3,643 | 28,109 |
+| /qa | 1,945 | 30,054 |
+| /ship | 3,301 | 33,355 |
+| /retro | 2,802 | 36,157 |
+
+Plus CLAUDE.md per invocation (~1,545 x 8 = ~12,360) + formatting.md (~627 x 7 = ~4,389) = **~52,906 tokens** in skill overhead for a full Feature recipe. With a 200K context window, this leaves ~147K for conversation, code, and tool results. Workable but tight for large features — especially on Haiku (100K window), where this represents 53% of context before any work begins.
 
 ### Findings
 
-**A-1. Every skill violates D4 (>150 lines). Severity: HIGH**
+**A-1. Every skill violates D4's spirit (>150 lines). Severity: HIGH**
 - context.md:38 — Rule D4: "Split rules that exceed 150 lines"
-- context.md:77 — Health check: "Largest rule file > 150 lines = Critical"
+- D4 literally says "rules" not "skills." But context.md:77 health check defines >150 lines as "Critical" for any file. The toolkit's own standard judges itself as critically oversized.
 - All 16 skills exceed 150 lines. The smallest (explore) is 188 lines.
-- D4 specifically says "rules" not "skills" — but the spirit applies. The context.md health check table (line 77) defines >150 lines as "Critical" for any rule file, and skills/shared/formatting.md is referenced as a shared rule.
-- **Fix:** D4 should either be explicitly scoped to rules only (with a separate skill budget), or skills should be refactored. Practically: establish a skill budget (e.g., 300 lines for SKILL.md, with overflow into reference files that load on-demand). Refactor spec (732 lines) and init (511 lines + 557 ref) to use deferred content.
+- ~40-52% of large skills (spec, eng, init, audit, design) is examples/templates/output formats that could be deferred to reference files loaded only when that section executes.
+- **Fix:** Establish a skill budget distinct from D4 (e.g., 300 lines for SKILL.md core). Extract examples/templates into reference files. Refactor spec (732 lines) into spec-core.md (~200 lines) + spec-discover.md + spec-define.md + spec-decompose.md.
 
-**A-2. formatting.md adds 76 lines (~1,140 tokens) to 14 of 16 skills. Severity: MEDIUM**
-- 14 skills contain: `See skills/shared/formatting.md for presentation rules`
-- The line is a `See` reference, so Claude must read it, loading 76 lines.
-- ~60% of formatting.md is presentational (progress bars, discussion chunking) vs functional (tables at col 0, workflow discipline).
-- **Fix:** Split formatting.md into `formatting-functional.md` (~30 lines: tables, code blocks, workflow discipline) and `formatting-presentation.md` (~46 lines: progress bars, chunking). Skills reference only functional. Presentation loads only for interactive skills.
+**A-2. formatting.md adds ~627 tokens to 14 of 16 skills. Severity: MEDIUM**
+- 14 skills reference `skills/shared/formatting.md`.
+- ~60% is presentational (progress bars with `~N min` time estimates, discussion chunking) vs functional (tables at col 0, workflow discipline).
+- Time estimates (`~N min`) are particularly wasteful — AI has no basis for accurate time predictions.
+- **Fix:** Split into `formatting-core.md` (~35 lines: tables, code blocks, workflow discipline) and `formatting-presentation.md` (optional). Skills reference core only.
 
-**A-3. Reference files load eagerly, not on-demand. Severity: MEDIUM**
-- eng/references.md (286 lines), init/references.md (557 lines), audit/references.md (189 lines), design/templates.md (128 lines) are referenced in SKILL.md via `See` or inline.
-- Claude will read these when it encounters the reference, but the full content loads into context regardless of whether that section is needed.
-- **Fix:** Structure reference files with clear section headers and instruct skills to read only the relevant section (e.g., "Read `references.md` section 'Architecture Checklist' only if architecture mode").
-
-**A-4. Feature recipe context pressure is real. Severity: MEDIUM**
-- Full Feature recipe: `/spec` (10,980) + `/design` (7,545) + `/eng` (12,420) + `/tdd` (3,720) + `/review` (5,040) + `/qa` (3,765) + `/ship` (6,135) + `/retro` (4,770) = ~54,375 tokens in skill content alone
-- Plus CLAUDE.md overhead per invocation (~1,755 x 8 = ~14,040)
-- Plus formatting.md overhead (~1,140 x 7 = ~7,980)
-- Plus rules loaded via paths, conversation content, tool results
-- **Total skill overhead for a full Feature recipe: ~76,395 tokens**
-- With a 200K context window, this leaves ~124K for actual conversation, code, and tool results. Tight for a large feature.
-- **Fix:** This is manageable but worth documenting. Add a "Context Budget" note to recipes.md estimating overhead per recipe.
+**A-3. Reference files load all-or-nothing. Severity: MEDIUM**
+- eng/references.md (11,725 bytes), init/references.md (18,813 bytes), audit/references.md (7,922 bytes) have no section-level loading.
+- When a skill references them, Claude reads the entire file.
+- **Fix:** Split large reference files by phase. init/references.md -> init-discovery.md, init-profile.md, init-rules.md, init-files.md, init-verify.md. Each loads only when its phase executes.
 
 ---
 
 ## 3. Dimension B: AI Agent Effectiveness
 
-**Score: 68/100**
+**Score: 64/100**
 
 ### Findings
 
-**B-1. Guard rules are advisory, not enforced. Severity: HIGH**
-- rules/guard.md is a set of instructions to Claude, not programmatic hooks.
-- Claude Code supports `settings.json` hooks (PreToolUse, PostToolUse) that can intercept bash commands before execution.
-- The guard rule says "Check every bash command against these patterns before execution" (guard.md:10) — but this is a soft instruction the AI can forget, especially after context compaction.
-- **Evidence:** After `/compact`, guard.md content is evicted from context. If the user then asks Claude to run `rm -rf`, the guard has no mechanism to reload itself.
-- **Fix:** Create a recommended `settings.json` hook configuration that consumers can install. The hook would intercept PreToolUse(Bash) and check for destructive patterns. Keep the advisory rules as defense-in-depth.
+**B-1. Guard rules are advisory-only — Claude Code's hooks API is never used. Severity: CRITICAL**
+- rules/guard.md is instructions to the AI, not programmatic enforcement.
+- Claude Code supports `PreToolUse` hooks in `settings.json` that can intercept and **block** bash commands before execution. Exit code 2 blocks the action. JSON output with `"permissionDecision": "deny"` blocks and feeds reason back to Claude.
+- The official hooks docs (code.claude.com/docs/en/hooks-guide) show exactly this pattern:
+  ```json
+  {
+    "hooks": {
+      "PreToolUse": [{
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.tool_input.command' | grep -qE 'rm -rf|DROP TABLE|git push.*--force|git reset --hard' && exit 2 || exit 0"
+        }]
+      }]
+    }
+  }
+  ```
+- This is not speculative — `PreToolUse` hooks fire **before** any permission-mode check. A hook returning deny blocks the tool even with `--dangerously-skip-permissions`.
+- hashb's `/init` skill should scaffold this configuration. guard.md should remain as defense-in-depth documentation.
+- **Fix:** Add guard hook scaffolding to `/init`. Create `.claude/hooks/guard-check.sh` script. Add to recommended `.claude/settings.json`.
 
-**B-2. Branch/base detection duplicated in 7 skills. Severity: HIGH**
-- The following files contain near-identical bash blocks:
-  - skills/eng/SKILL.md:138-139
-  - skills/review/SKILL.md:42-43
-  - skills/ship/SKILL.md:33-37
-  - skills/fix/SKILL.md:191-192
-  - skills/tdd/SKILL.md:73-74
-  - skills/retro/SKILL.md:26-27
-  - skills/qa/SKILL.md:54
-- The blocks are slightly different across skills (some use `gh repo view` fallback, some don't), creating inconsistent behavior.
-- **Fix:** Create `skills/shared/preflight.md` with a single canonical bash block. Each skill references it: `See skills/shared/preflight.md for branch/base detection`. This also centralizes the `gh` CLI dependency check.
+**B-2. Branch/base detection duplicated across 7 skills with inconsistent variants. Severity: HIGH**
+- Duplicated in: eng/SKILL.md:138-139, review/SKILL.md:42-45, ship/SKILL.md:33-36, fix/SKILL.md:191, tdd/SKILL.md:73, retro/SKILL.md:26-27, qa/SKILL.md:54.
+- **Variants are inconsistent:** eng uses 2-fallback chain (`gh pr view || gh repo view || echo "main"`), qa uses single fallback (`gh pr view || echo "main"`), fix has BRANCH only (no BASE), tdd has BRANCH only.
+- **Fix:** Create `skills/shared/preflight.md` with canonical bash block + `gh` availability check. All 7 skills reference it.
 
-**B-3. External dependencies assumed without graceful degradation. Severity: HIGH**
-- `gh` CLI: Referenced in 7+ skills (ship, review, eng, retro, qa, fix, spec). No availability check. If `gh` is not installed, skills fail silently or with cryptic errors.
-- Context7 MCP: CLAUDE.md says "must include Context7 (live library docs)." No degradation path. If Context7 is down or misconfigured, research-dependent skills have no fallback.
-- Playwright: qa/SKILL.md requires it for browser testing. Pre-flight warns but no alternative testing approach is suggested.
-- **Fix:** Add a dependency check section to `skills/shared/preflight.md`. Pattern: `command -v gh >/dev/null 2>&1 || echo "WARNING: gh CLI not found — PR creation will be skipped"`. Define graceful degradation for each dependency.
+**B-3. TDD checkpoint state not persisted — /tdd continue can't actually resume. Severity: MEDIUM**
+- tdd/SKILL.md describes checkpoint output format (lines 148-160) but never instructs persisting to a file.
+- After context compaction, the agent loses which cycle it completed, what test was running, and the original /eng TDD plan.
+- `/tdd continue` must re-read /eng output to reconstruct position — unreliable after compaction.
+- **Fix:** `/tdd` should write `.tdd-checkpoint-{branch}.json` after each cycle: `{"total": 5, "completed": 3, "last_test": "tests/feature.test.ts", "status": "GREEN"}`. Clean up on completion.
 
 **B-4. 3-strike rule state lost on context compaction. Severity: MEDIUM**
-- fix/SKILL.md:155-178 defines a 3-strike hard stop for failed hypotheses.
-- Strike count exists only in conversation context — no file persistence.
-- After `/compact`, the agent loses awareness of prior strikes and may re-attempt hypotheses.
-- **Fix:** Persist strike state to a temp file (e.g., `.fix-state.json`) that fix reads at start. Clean up on fix completion. This is lightweight — just `{"strikes": 2, "hypotheses": [...]}`.
+- fix/SKILL.md:155-178 tracks strikes in conversation context only.
+- After `/compact`, agent may re-attempt hypotheses without knowing 3 already failed.
+- **Fix:** Persist to `.fix-state-{branch}.json`: `{"strikes": [{"hypothesis": "...", "result": "..."}], "status": "HARD_STOP"}`. Read at Phase 2 start.
 
-**B-5. No orchestrator for recipe chains. Severity: MEDIUM**
-- Recipes (recipes.md) describe chains like `/spec` -> `/design` -> `/eng` -> `/tdd` -> `/review` -> `/qa` -> `/ship` -> `/retro`.
-- Each skill suggests the next via "Next Step" tables, but there's no orchestrator tracking which step the chain is on.
-- If context is compacted mid-recipe, the chain state is lost. The user must remember where they were.
-- **Fix:** This is acceptable for now — recipes are guidance, not automation. But document explicitly that recipes are single-session patterns and cross-session work should use `/spec decompose` (which persists to TODOS.md).
+**B-5. Windows bash failures in fix and tdd branch creation. Severity: MEDIUM**
+- fix/SKILL.md:194 and tdd/SKILL.md:76 use `tr '[:upper:]' '[:lower:]' | tr ' ' '-' | head -c 30`
+- `tr` with POSIX character classes fails on some Windows bash environments.
+- `head -c 30` may truncate multi-byte UTF-8 characters.
+- retro/SKILL.md:37 uses `awk` which may not be in PATH on Windows.
+- **Fix:** Replace with bash-native: `SLUG="${description,,}"; SLUG="${SLUG// /-}"; SLUG="${SLUG:0:30}"`. Replace `awk` with `cut` or bash arithmetic.
 
-**B-6. TODOS.md has no validation or corruption recovery. Severity: MEDIUM**
-- TODOS.md is the cross-session persistence layer for decomposed features (recipes.md:80-108, docs.md:19-76).
-- No schema validation. If a user manually edits TODOS.md and breaks the format, `/eng` may misparse tasks.
-- No backup or corruption recovery. If TODOS.md is deleted, all decompose progress is lost.
-- **Fix:** Add a lightweight validation step to skills that read TODOS.md: check for expected format markers (`### Feature:`, `- [ ]`/`- [x]`, `#N` IDs). If validation fails, warn rather than silently misparsing.
+**B-6. External dependencies assumed without graceful degradation. Severity: HIGH**
+- `gh` CLI: Referenced in 7+ skills. No availability check. If not installed, `BASE` silently defaults to "main" which may be wrong.
+- Context7 MCP: Required in CLAUDE.md Project Profile. No degradation path.
+- Playwright: qa/SKILL.md requires it. Pre-flight warns but no fallback.
+- **Fix:** Add dependency check to `skills/shared/preflight.md`: `command -v gh >/dev/null 2>&1 || echo "WARNING: gh CLI not found"`. Define graceful degradation for each.
 
-**B-7. Cross-platform issues (Windows). Severity: LOW**
-- All bash blocks assume Unix shell (git, gh, npm, find, awk, head, tr, ls).
-- Claude Code on Windows uses bash via WSL or Git Bash, so most commands work.
-- However, path separators, `command -v`, and tool availability may differ.
-- **Fix:** Low priority. Claude Code's bash environment normalizes most differences. Note in README that Windows support is via Git Bash/WSL.
+**B-7. No orchestrator for recipe chains — state loss on compaction. Severity: MEDIUM**
+- Recipe chains (spec -> design -> eng -> tdd -> review -> qa -> ship -> retro) are tracked only in conversation context.
+- Each skill suggests the next via "Next Step" tables, but nothing persists chain position.
+- **Fix:** Acceptable — recipes are guidance, not automation. Document explicitly that multi-skill chains are single-session and large features should use `/spec decompose`.
 
 ---
 
 ## 4. Dimension C: Process Coherence
 
-**Score: 78/100**
+**Score: 75/100**
 
 ### Findings
 
 **C-1. Ship's MICRO versioning vs versioning rule's semver. Severity: MEDIUM**
-- ship/SKILL.md:164 defines a 4-digit version scheme: `MICRO (4th digit)` for trivial changes.
+- ship/SKILL.md:164-168 defines 4-digit scheme: MICRO (4th digit) for trivial changes.
 - versioning.md uses standard 3-digit semver (MAJOR.MINOR.PATCH).
-- ship/SKILL.md:185 formats changelog as `## [X.Y.Z.W]` — a non-standard semver format.
-- **Evidence:** versioning.md:26-29 shows Patch as the smallest bump. ship/SKILL.md:164-168 adds MICRO below Patch.
-- These are in the same repo but describe different versioning schemes.
-- **Fix:** Align. Either: (a) adopt 4-digit versioning in versioning.md (and document why), or (b) remove MICRO from ship and use PATCH as the smallest unit. Option (b) is simpler and standard.
+- ship/SKILL.md:185 formats changelog as `## [X.Y.Z.W]`.
+- These are in the same repo but describe different schemes.
+- **Fix:** Remove MICRO from /ship and use PATCH as the smallest unit. Standard semver is universal. The 4th digit adds confusion with no real benefit.
 
-**C-2. shipping.md scoped to hashb repo only, but reads as generic. Severity: MEDIUM**
-- shipping.md:1-2 says "Self-shipping rule" in the description frontmatter.
-- shipping.md:16 says "This repo is a live plugin."
-- shipping.md:52 says "Always push. A commit without a push is invisible to plugin users."
-- These rules are correct for the hashb repo itself but could confuse consumers whose repos have different shipping practices.
-- The `paths:` frontmatter (skills/\*\*, rules/\*\*) limits it to hashb files — so it won't activate for consumer code.
-- **Fix:** Low risk due to path scoping, but add a comment at the top: `> This rule applies to the hashb plugin repo only. Consumer repos define their own shipping workflow.`
+**C-2. QA/Fix loop has no termination criteria. Severity: MEDIUM**
+- recipes.md:13-16 defines review pattern with "max 2 cycles" but QA loop has no cycle limit.
+- If `/fix` hits the 3-strike wall during a QA loop, recovery is undefined.
+- Does `/fix` escalation propagate back to `/qa`? The answer isn't documented.
+- **Fix:** Add to recipes.md: "Repeat `/qa` -> `/fix` loop max 3 cycles. If bugs persist after 3 cycles, escalate to user." Add to `/qa`: output a cycle count.
 
-**C-3. /quick overlaps with multiple skills. Severity: LOW**
-- /quick has modes that overlap with /eng (architecture), /spec (requirements), /fix (debug), /review (review), /research (research), /design (design).
-- This is intentional — quick is the lightweight entry point for small tasks.
-- The escalation rules (quick/SKILL.md) help: if the task is too complex, escalate to the full skill.
-- **Risk:** AI agent may use /quick when the full skill is needed, producing shallow results.
-- **Fix:** This is working as designed. The Skill Routing table in CLAUDE.md + escalation rules are sufficient. Consider adding a line to CLAUDE.md: "When in doubt between /quick and a full skill, prefer the full skill."
+**C-3. Design -> Eng handoff is too compressed. Severity: MEDIUM**
+- design/SKILL.md produces a Handoff Summary (lines 318-332) with counts ("N new components") but not enumeration.
+- Error UX says "(see Phase 2 for detail)" — but if `/eng` runs in isolation (new session), Phase 2 context is gone.
+- Data needs listed but not mapped to API endpoints or data flow.
+- **Fix:** Expand design handoff summary to include: component enumeration (name + new/reuse), error scenario table (scenario -> message -> recovery), data flow matrix (screen -> source -> pattern). Add to `/eng` Phase 0: if design handoff is compressed, warn.
 
-**C-4. Explore -> Spec handoff is conversational only. Severity: LOW**
-- /explore produces no artifacts (explore/SKILL.md:18: "No code changes. No artifacts.")
-- Exploration findings exist only in conversation context.
-- If the user starts a new session after exploration, findings are lost.
-- **Fix:** Acceptable. Exploration is inherently ephemeral. Users who want to preserve findings can copy them or transition to /spec within the same session. Adding artifacts to /explore would contradict its design.
+**C-4. shipping.md scoped to hashb repo only, but reads as generic. Severity: LOW**
+- shipping.md frontmatter says "Self-shipping rule" and "This repo is a live plugin."
+- `paths:` frontmatter limits activation to hashb files. Low risk of consumer confusion.
+- **Fix:** Add comment: `> This rule applies to the hashb plugin repo only.`
 
-**C-5. Review confidence scoring lacks calibration. Severity: LOW**
-- review/SKILL.md defines confidence levels (HIGH/MEDIUM/LOW) but criteria are subjective.
-- Different invocations may score the same code differently.
-- **Fix:** This is inherent to AI-based review. The scoring provides a useful signal even without perfect calibration. Consider adding calibration examples (e.g., "HIGH = all review categories pass with no findings beyond style nits").
+**C-5. Spec registry drift when /ship is bypassed. Severity: MEDIUM**
+- Spec registry requires /spec to write, /ship to merge deltas.
+- If users ship manually (git push, different CI), deltas never merge.
+- **Fix:** Document as known limitation. Add unmerged-delta warning to `/spec` Phase 0: if `specs/deltas/` has unmerged files, warn before proceeding.
 
-**C-6. Spec registry drift risk. Severity: MEDIUM**
-- The spec registry (specs/ directory) requires /spec to write specs and /ship to merge deltas.
-- If users ship code without /ship (manual git push, different CI), specs drift.
-- **Fix:** Document this as a known limitation. Add a note to CLAUDE.md: "The spec registry stays current only when /ship is used for all releases. Manual shipping bypasses delta spec merging."
+**C-6. /quick overlaps intentionally — well-managed. Severity: LOW**
+- /quick has modes overlapping /eng, /spec, /fix, /review, /research, /design.
+- Escalation rules (quick/SKILL.md:218-231) handle boundary correctly.
+- Recipes bypass /quick entirely — Feature recipe goes straight to /spec.
+- **Fix:** No change needed. Consider adding to CLAUDE.md: "When in doubt between /quick and a full skill, prefer the full skill."
+
+**C-7. Retro memory persistence uses Claude Code's native memory — but consumers don't read it. Severity: MEDIUM**
+- retro/SKILL.md:250 says "Save as Claude Code memories." This references the built-in memory system — the mechanism IS specified.
+- Gap: `/eng`, `/spec`, `/review` don't explicitly read these memories during context gathering. The learning loop has a write path but no read path.
+- **Fix:** Add to `/eng` Phase 0 and `/review` Phase 1: "Check Claude Code memories for relevant project/feedback memories from prior retros." Single line addition to each skill.
 
 ---
 
 ## 5. Dimension D: Missing Capabilities
 
-**Score: 65/100**
+**Score: 63/100**
 
 ### SDLC Coverage Map
 
@@ -235,123 +255,89 @@ Every skill invocation loads (approximately):
 | Retrospective | YES | /retro | |
 | Documentation | YES | /docs | |
 | Compliance | YES | /audit, /init | |
-| **CI/CD** | NO | | D-1 |
-| **Monitoring** | NO | | D-2 |
-| **Incident Response** | NO | | D-3 |
-| **Rollback** | NO | | D-4 |
-| **Dependency Mgmt** | NO | | D-5 |
-| **Performance** | NO | | D-6 |
-| **Accessibility** | PARTIAL | /design covers a11y | D-7 |
+| **CI/CD** | NO | | No skill, placeholder rule only |
+| **Monitoring** | NO | | rules/infrastructure/README.md is 11-line placeholder |
+| **Incident Response** | NO | | No rollback/revert skill |
+| **Dependency Security** | NO | | No npm audit / pip audit / cargo audit |
+| **Secret Scanning** | NO | | No gitleaks / truffleHog integration |
+| **Performance Testing** | NO | | QA is functional only |
+| **Accessibility Testing** | PARTIAL | /design covers a11y design | No automated a11y testing |
 
 ### Findings
 
 **D-1. Security rule covers only 4 file extensions. Severity: HIGH**
 - security.md:9-12 paths: `["**/*.ts", "**/*.tsx", "**/*.cs", "**/*.py"]`
 - Missing: `.js`, `.jsx`, `.go`, `.java`, `.kt`, `.rb`, `.rs`, `.php`, `.swift`, `.vue`, `.svelte`
-- JavaScript (`.js`, `.jsx`) is the most widely used language on the web. Its omission means security rules never activate for JS-only projects.
-- **Fix:** Add all common extensions to the paths array:
-  ```yaml
-  paths:
-    - "**/*.ts"
-    - "**/*.tsx"
-    - "**/*.js"
-    - "**/*.jsx"
-    - "**/*.cs"
-    - "**/*.py"
-    - "**/*.go"
-    - "**/*.java"
-    - "**/*.kt"
-    - "**/*.rb"
-    - "**/*.rs"
-    - "**/*.php"
-    - "**/*.swift"
-    - "**/*.vue"
-    - "**/*.svelte"
-  ```
+- JavaScript (`.js`, `.jsx`) is the most widely used web language. Its omission means security rules **never activate** for JS-only projects.
+- **Fix:** Add all common extensions. The security content is language-agnostic — only the `paths:` filter needs expanding.
 
-**D-2. No error recovery / resume mechanism. Severity: MEDIUM**
-- If /tdd fails at cycle 3 of 5, `/tdd continue` exists (tdd/SKILL.md) — good.
-- If /ship fails at step 4 of 8, there's no resume. The user must re-run /ship from the beginning.
-- If /swarm merge fails after merging 2 of 4 streams, recovery requires manual git operations.
-- **Fix:** For /ship, add a state checkpoint file (`.ship-state.json`) that tracks which steps completed. On re-invocation, offer to resume from the last checkpoint. For /swarm, the worktree model already provides isolation — document recovery steps explicitly.
+**D-2. No secret scanning integration. Severity: HIGH**
+- ship/SKILL.md:137 checks for "hardcoded credentials" via manual AI review — unreliable.
+- No gitleaks, truffleHog, or GitHub secret scanning integration.
+- Claude Code's hooks API supports `PreToolUse` on git operations — a `pre-push` equivalent is feasible.
+- **Fix:** Add gitleaks step to `/ship` pre-landing review. `/init` should scaffold a pre-commit secret scanning hook.
 
-**D-3. No CI/CD patterns despite CI references. Severity: MEDIUM**
-- ship/SKILL.md:361-379 checks CI status after PR creation.
-- No skill provides CI/CD setup guidance, pipeline templates, or integration patterns.
-- rules/infrastructure/README.md is a placeholder: "add as needed" (11 lines total).
-- **Fix:** Add CI templates to init/references.md for common platforms (GitHub Actions, GitLab CI). /init could scaffold a basic CI config based on the Project Profile's Stack field.
+**D-3. No dependency vulnerability scanning. Severity: MEDIUM**
+- security.md:34 mentions verifying dependencies exist (anti-hallucination) but no CVE scanning.
+- **Fix:** Add to `/ship` or `/audit`: detect package manager, run `npm audit` / `pip audit` / `cargo audit`. Fail on critical vulnerabilities.
 
-**D-4. No dependency vulnerability scanning. Severity: MEDIUM**
-- security.md:34 mentions "verify dependencies exist in official registries" — about AI hallucinating packages.
-- No integration with `npm audit`, `pip audit`, `cargo audit`, `dotnet list package --vulnerable`.
-- **Fix:** Add a dependency audit step to /ship or /audit. Pattern: detect package manager from Project Profile, run the appropriate audit command, fail on critical vulnerabilities.
+**D-4. No error recovery / resume mechanism. Severity: MEDIUM**
+- If /ship fails at step 4 (version bump), no resume — must restart from step 1.
+- If /swarm merge fails after 2 of 4 streams, recovery requires manual git.
+- `/tdd continue` exists but can't actually resume without persistent checkpoints (see B-3).
+- **Fix:** For /ship, add `.ship-state.json` checkpoint. For /swarm, document recovery steps. For /tdd, persist checkpoints (B-3 fix).
 
-**D-5. No rollback/revert skill. Severity: LOW**
-- After shipping, if code causes issues, there's no guided rollback workflow.
-- **Fix:** Low priority. Git revert is straightforward. Could add a "Rollback" recipe to recipes.md: `git revert {merge-commit} -> /review -> /ship`.
-
-**D-6. No performance testing. Severity: LOW**
-- QA tests UI behavior but nothing tests under load.
-- **Fix:** Out of scope for a workflow toolkit. Performance testing requires project-specific infrastructure. Document as a consumer responsibility.
-
-**D-7. No upgrade/migration mechanism. Severity: LOW**
-- When hashb publishes a breaking change (major version), consumers have no migration path.
-- **Fix:** Add a MIGRATION.md for major versions, and have /init check the installed version against current and suggest migration steps.
+**D-5. No CI/CD patterns despite CI references. Severity: MEDIUM**
+- ship/SKILL.md:361-379 checks CI after PR creation but assumes CI pre-exists.
+- rules/infrastructure/README.md is an 11-line placeholder.
+- **Fix:** Add CI template scaffolding to /init based on detected Stack (GitHub Actions, GitLab CI).
 
 ---
 
 ## 6. Dimension E: Engineering Quality
 
-**Score: 75/100**
+**Score: 74/100**
 
 ### Findings
 
 **E-1. plugin.json says "15 skills" — actual count is 16. Severity: MEDIUM**
-- .claude-plugin/plugin.json:2 description: "Dev workflow toolkit -- 15 skills + domain-specific rules"
-- Actual skill count: 16 (explore was added later, per git history commit 9e8be42).
+- .claude-plugin/plugin.json:2: "Dev workflow toolkit -- 15 skills"
+- Actual: 16 (explore added in commit 9e8be42, description not updated).
 - README.md:11 correctly says "16 skills."
-- **Fix:** Update plugin.json description to "16 skills."
+- **Fix:** Update plugin.json description.
 
-**E-2. `.history/` archival not in .gitignore. Severity: HIGH**
+**E-2. `.history/` archival not in .gitignore — committed to consumer repos. Severity: HIGH**
 - ship/SKILL.md:265-296 creates `.history/{branch-name}-{date}/` directories.
-- .gitignore does not include `.history/`.
-- ship/SKILL.md:292 says "Stage the .history/ directory for commit."
-- This means every feature's entire artifact chain (spec, design, eng plan, review, QA report, retro) gets committed to the consumer's repo.
-- Over time, this significantly bloats the repo — especially for active projects shipping frequently.
-- **Fix:** Either: (a) add `.history/` to the recommended .gitignore and don't stage it (local reference only), or (b) keep it committed but add a cleanup mechanism (e.g., archive entries older than N releases to a separate branch or remove them). Option (a) is simpler and recommended.
+- ship/SKILL.md:292: "Stage the .history/ directory for commit."
+- .gitignore has NO `.history/` entry.
+- Every feature ships its entire artifact chain (spec, design, eng, review, QA, retro) into the repo. Over time this significantly bloats the repo.
+- **Fix:** Add `.history/` to .gitignore template. Change ship/SKILL.md to NOT stage .history/. Keep as local-only reference.
 
-**E-3. 16 skills is defensible but cognitive load is real. Severity: LOW**
-- Each skill covers a distinct SDLC phase — no redundancy except intentional /quick overlap.
-- New users face a 16-item menu. The Skill Routing table in CLAUDE.md and /quick as entry point mitigate this.
-- The README's quick reference section (README.md:79-95) provides clear intent-to-skill mapping.
-- **Fix:** No change needed. The current mitigation (routing table, /quick, README reference) is sufficient.
+**E-3. 16 skills is defensible. Severity: LOW**
+- Each covers a distinct SDLC phase. Skill Routing table in CLAUDE.md + /quick as entry point mitigates cognitive load. Research confirms comparable frameworks have similar counts: Superpowers has 14 skills, gstack has 23+.
+- **Fix:** No change. Resist adding #17 unless it eliminates #16.
 
-**E-4. Detail level is wildly uneven across skills. Severity: LOW**
-- /spec (732 lines) vs /explore (188 lines) — 3.9x difference.
-- /init with references (1,068 lines) vs /tdd (248 lines) — 4.3x difference.
-- Some disparity is natural (init bootstraps entire repos, tdd follows a simple RED-GREEN-REFACTOR cycle).
-- But /spec at 732 lines is arguably over-specified — the decompose workflow alone is ~250 lines.
-- **Fix:** Consider extracting /spec's decompose mode into a separate reference file that loads only when decompose is invoked.
-
-**E-5. Spec registry adds justified but fragile complexity. Severity: LOW**
-- The 3-point system (specs/, specs/deltas/, /ship merges) is sophisticated.
-- It enables meaningful spec tracking across features — but requires discipline.
-- If any point breaks (user doesn't run /ship, delta format changes, spec deleted), the system drifts.
-- **Fix:** Document the fragility. Consider making delta merging optional with a flag rather than automatic.
+**E-4. Detail proportionality is acceptable. Severity: LOW**
+- /spec (732 lines) vs /explore (188 lines) — 3.9x. Justified: spec manages a persistent registry with delta system; explore is intentionally structureless.
+- /init + refs (1,068 lines) is the largest. Justified: bootstrapping entire repos is complex.
+- **Fix:** Extract /spec decompose mode into `spec-decompose.md` reference file (~250 lines saved from SKILL.md).
 
 ---
 
 ## 7. Dimension F: Security Posture
 
-**Score: 70/100**
+**Score: 65/100**
 
 ### Findings
 
-**F-1. Guard enforcement gap. Severity: HIGH**
-- guard.md defines destructive patterns but enforcement is advisory only.
-- Claude Code hooks (`settings.json` PreToolUse) can intercept bash commands programmatically.
-- Without hooks, guards depend on Claude remembering the instructions — unreliable after compaction.
-- **Fix:** Provide a recommended hooks configuration in `/init`'s scaffold. Example:
+**F-1. Guard enforcement gap — hooks API available but unused. Severity: CRITICAL**
+- (Expanded from B-1.) Claude Code hooks are production-ready. The API supports:
+  - `PreToolUse` with `matcher: "Bash"` — fires before every bash command
+  - Exit code 2 blocks the action
+  - JSON `permissionDecision: "deny"` blocks AND feeds reason back to Claude
+  - **Hooks fire before permission-mode checks** — cannot be bypassed even with `--dangerously-skip-permissions`
+- hashb has zero hooks configuration. Guard rules are markdown instructions only.
+- **Fix:** `/init` should scaffold `.claude/settings.json` with:
   ```json
   {
     "hooks": {
@@ -359,196 +345,221 @@ Every skill invocation loads (approximately):
         "matcher": "Bash",
         "hooks": [{
           "type": "command",
-          "command": "echo '$INPUT' | grep -qE 'rm -rf|DROP TABLE|git push --force|git reset --hard' && echo 'DESTRUCTIVE COMMAND DETECTED' && exit 1 || exit 0"
+          "command": ".claude/hooks/guard-check.sh"
         }]
       }]
     }
   }
   ```
-  This is defense-in-depth, not a replacement for the advisory rules.
+  And `.claude/hooks/guard-check.sh`:
+  ```bash
+  #!/bin/bash
+  INPUT=$(cat)
+  CMD=$(echo "$INPUT" | jq -r '.tool_input.command')
+  if echo "$CMD" | grep -qE 'rm -rf|DROP TABLE|DROP DATABASE|TRUNCATE|git push.*--force|git push.*-f|git reset --hard|kubectl delete|docker system prune'; then
+    echo "BLOCKED: Destructive command detected: $CMD" >&2
+    exit 2
+  fi
+  exit 0
+  ```
 
 **F-2. Security rule path coverage incomplete. Severity: HIGH**
-- (Same as D-1.) Only covers .ts, .tsx, .cs, .py.
-- Missing .js, .jsx, .go, .java, .kt, .rb, .rs, .php, .swift, .vue, .svelte.
+- (Same as D-1.) Only 4 extensions covered.
 
-**F-3. No secret scanning integration. Severity: MEDIUM**
-- No integration with gitleaks, truffleHog, GitHub secret scanning.
-- The ship pre-landing review (ship/SKILL.md:137) checks for "hardcoded credentials, tokens, or API keys in the diff" — but this is a manual AI check, not tooling.
-- **Fix:** Add a recommended pre-commit secret scanning step. /init could scaffold a pre-commit hook using gitleaks or similar.
+**F-3. No secret scanning. Severity: HIGH**
+- (Same as D-2.)
 
-**F-4. .claudeignore recommended but not verified. Severity: LOW**
-- /init creates .claudeignore, but no skill verifies it remains current.
-- New sensitive files added after init won't be caught.
-- **Fix:** Add .claudeignore freshness check to /audit. Pattern: compare .claudeignore patterns against actual file tree, flag unignored sensitive file patterns (.env.*, *.pem, *.key).
+**F-4. .claudeignore recommended but never validated. Severity: LOW**
+- /init creates .claudeignore but no skill verifies it remains current.
+- **Fix:** Add .claudeignore freshness check to /audit.
 
 ---
 
 ## 8. Dimension G: Inspiration Integration
 
-**Score: 82/100**
+**Score: 80/100**
 
-### Source Mapping
+### Comparable Tool Comparison
 
-| Influence | Where it appears in hashb | Quality |
-|-----------|--------------------------|---------|
-| **Engineering rigor** (Gary Tan ethos) | TDD enforcement, RCA iron law, evidence-first debugging, 3-strike rule, confidence-scored reviews | Excellent — deeply integrated, not bolted on |
-| **Claude Code conventions** | Plugin structure (plugin.json, SKILL.md, paths: frontmatter), skill invocation model, Agent tool usage in /swarm | Excellent — follows platform conventions well |
-| **Open Spec** | Spec registry, delta specs, decompose workflow, TODOS.md cross-session state | Good — sophisticated but adds complexity |
-| **Superpowers / agent patterns** | Autonomous mode chains, /swarm parallel streams, worktree isolation, fresh-context review | Good — uses Claude Code's native agent capabilities |
-| **Workflow tooling** (general) | Recipes, gates, handoffs, skill routing | Excellent — forms a coherent system |
+| Dimension | **hashb** | **Superpowers** | **OpenSpec** | **GSD** | **gstack** |
+|-----------|-----------|-----------------|-------------|---------|-----------|
+| **Skills** | 16 (full SDLC) | 14 (dev-focused) | 3 (propose/apply/archive) | Task-based | 23+ (role-based) |
+| **TDD** | Mandatory (/eng plan + /tdd execute) | Mandatory (deletes code written before tests) | Not core | Not emphasized | Not emphasized |
+| **Enforcement** | Advisory (markdown STOP gates) | **Hooks** + mandatory workflow | Checkpoint-based | Context isolation | Role governance |
+| **Spec System** | Delta specs + registry + decompose | Brainstorm -> Spec -> Plan | Propose -> Apply -> Archive | Schema detection | /plan-ceo-review |
+| **Context Mgmt** | E4 rule: compact at 70% | Not addressed | Not addressed | **Core feature**: fresh 200K windows per task, 30-40% load target | ELI16 mode |
+| **Code Review** | Confidence-scored, blocks on LOW | Phase 6 (built-in) | Not core | Atomic commits + quality gates | /review + readiness dashboard |
+| **Parallel Work** | /swarm with worktree isolation | dispatching-parallel-agents | Not supported | Not supported | Not supported |
+| **Debugging** | /fix with 3-strike RCA | Systematic 4-phase debugging | Not core | Not core | Not core |
+| **Session Continuity** | TODOS.md for decomposed features | Multi-hour autonomous | Not addressed | **State persisted to disk** | Not addressed |
+| **Hooks Usage** | None (advisory rules only) | **Yes** (mandatory enforcement) | Not documented | Not documented | Not documented |
 
-### Assessment
+### Source Integration Assessment
 
-The integration is **cohesive, not fragmented**. The influences reinforce each other rather than competing:
-- Engineering rigor provides the quality gates
-- Claude Code conventions provide the delivery mechanism
-- Open Spec provides the requirements framework
-- Agent patterns provide the execution model
+| Influence | Where in hashb | Quality | Evidence |
+|-----------|---------------|---------|----------|
+| **Engineering rigor** (Gary Tan ethos) | TDD enforcement, RCA iron law, evidence-first, 3-strike, confidence-scored reviews | Excellent | fix/SKILL.md:11 "Iron Law", tdd/SKILL.md RED-GREEN-REFACTOR gates |
+| **Claude Code conventions** | plugin.json, SKILL.md, paths: frontmatter, Agent tool in /swarm | Excellent | Follows platform conventions precisely |
+| **OpenSpec** | Spec registry, delta specs, decompose, TODOS.md | Good | spec/SKILL.md:595-682 delta system |
+| **Superpowers** | TDD mandatory, debugging methodology, subagent isolation | Partial | Same TDD philosophy, but Superpowers enforces harder (hooks + code deletion) |
+| **GSD** | Context awareness (E4 compact rule) | Weak | hashb has the rule but doesn't implement GSD's fresh-window-per-task pattern |
 
-**One fragmentation risk:** The spec registry (Open Spec influence) operates independently from the rest of the system. It requires /spec to write, /ship to merge, and persists in specs/. This is the most "bolted on" feature — the rest of the toolkit works fine without it, and it has the most failure modes.
+### Key Gap vs Superpowers
 
-**Missing Superpowers patterns:** hashb doesn't implement persistent agent memory beyond TODOS.md and the spec registry. Modern agent frameworks increasingly use structured memory (conversation summaries, decision logs, preference learning). The /retro skill writes to `.retro/` but this is per-feature, not cumulative. hashb could benefit from a cumulative learning mechanism — e.g., /retro findings that persist across features and inform future /eng decisions.
+Superpowers enforces mandatory workflows via hooks. hashb enforces via markdown instructions. This is the single biggest competitive gap. Superpowers' approach means enforcement survives context compaction, permission mode changes, and agent autonomy. hashb's approach relies on the agent reading and following instructions — which degrades under load.
+
+**The fix is straightforward:** hashb already has guard.md with the right patterns. Converting these to hooks is a configuration change, not an architectural rewrite.
+
+### Coherence Assessment
+
+The system is **cohesive, not fragmented**. Skills reference each other consistently, recipes chain logically, rules apply uniformly. The main fragmentation risk is the spec registry — it operates semi-independently (requires /spec to write, /ship to merge) and has the most failure modes. But it's also the most sophisticated feature.
 
 ---
 
 ## 9. Architectural Verdicts
 
-### H1. Skills vs Subagents: Does hashb need subagent support?
+### H1. Skills vs Subagents
 
-**Verdict: Yes, selectively. hashb already uses subagents correctly in /swarm.**
+**Verdict: hashb already uses subagents correctly.**
 
-Evidence:
-- swarm/SKILL.md:178 explicitly uses `Agent tool with isolation: "worktree"` for parallel streams.
-- review/SKILL.md desires "fresh context" for independence — this is a subagent use case.
-- The current skill-only model works for single-stream work. The skill -> subagent boundary is at parallelism (/swarm) and independence (/review).
+- swarm/SKILL.md:178 uses `Agent tool with isolation: "worktree"` for parallel streams.
+- /review conceptually benefits from fresh-context isolation (no implementation bias).
+- Superpowers comparison validates this: its `subagent-driven-development` skill uses the same pattern (fresh agent per task, structured validation).
+- **No change needed.** /swarm already implements the pattern. Consider documenting /review's fresh-context option.
 
-**Recommendation:** No change needed. /swarm already uses subagents via Claude Code's Agent tool. /review could optionally use a subagent for truly independent review (fresh context, no implementation bias), but the current model works.
+### H2. Consumer Hooks
 
-### H2. Consumer Hooks: Should hashb provide or recommend hooks?
+**Verdict: Yes — hashb should scaffold hooks. The API is production-ready.**
 
-**Verdict: Yes, recommend. Don't require.**
+Claude Code hooks API (verified via official docs):
+- **PreToolUse:** fires before tool execution. Exit 2 blocks. JSON `permissionDecision: "deny"` blocks + feeds reason.
+- **PostToolUse:** fires after. Cannot undo but can log/audit.
+- **SessionStart with `compact` matcher:** fires after compaction. Can re-inject critical context.
+- **Stop:** fires when Claude finishes. Can verify task completion.
+- **PreToolUse hooks fire before permission-mode checks** — enforcement cannot be bypassed.
 
-Evidence:
-- Guard rules are the strongest case for hooks — advisory enforcement is unreliable after compaction.
-- Hooks add complexity for consumers (settings.json configuration, cross-platform testing).
-- The value proposition: hooks catch destructive commands that advisory rules miss.
+**Recommended hooks for hashb consumers:**
 
-**Recommendation:** /init should scaffold a recommended `settings.json` with guard hooks. Frame as "recommended for production repos" not "required." Provide an opt-out: consumers can delete the hooks section.
+| Hook | Event | Purpose |
+|------|-------|---------|
+| Guard enforcement | PreToolUse (Bash) | Block destructive commands |
+| Protected files | PreToolUse (Edit\|Write) | Block edits to .env, .git/, lock files |
+| Post-compaction context | SessionStart (compact) | Re-inject TODOS.md state, active task, strike count |
+| Auto-format | PostToolUse (Edit\|Write) | Run prettier/eslint on edited files |
 
-### H3. Session Continuity: Can a full recipe run in one session?
+**Implementation:** `/init` scaffolds `.claude/settings.json` + `.claude/hooks/` directory with guard-check.sh. Frame as "recommended for production repos."
 
-**Verdict: Yes for small-medium features. No for large features.**
+### H3. Session Continuity
 
-Evidence:
-- Skill content overhead for full Feature recipe: ~76,395 tokens (calculated in Dimension A).
-- With 200K context: ~124K remaining for conversation, code, and tool results.
-- A small feature (< 200 lines of code, < 10 files) fits comfortably.
-- A medium feature (200-500 lines, 10-20 files) is tight but workable with `/compact`.
-- A large feature (500+ lines, 20+ files) will likely exhaust context before /ship.
+**Verdict: Full Feature recipe fits in one session for small-medium features. Large features require decompose.**
 
-**Recommendation:** Document context budgets in recipes.md. Add guidance: "For features estimated at >500 lines of code, use /spec decompose to break into session-sized tasks." The decompose workflow (recipes.md:77-128) already handles this — just make the threshold explicit.
+Token budget (byte-based, corrected):
+- Full Feature recipe skill overhead: ~52,906 tokens
+- On 200K context: 26% consumed by skill loading, ~147K remaining
+- On 128K context: 41% consumed, ~75K remaining
+- On 100K context (Haiku): 53% consumed, ~47K remaining
 
-### H4. Formatting Overhead vs Clarity
+**Threshold guidance:**
+- Small feature (<200 lines, <10 files): Comfortable in one session on any model
+- Medium feature (200-500 lines, 10-20 files): Workable on Opus/Sonnet with `/compact`
+- Large feature (500+ lines, 20+ files): Use `/spec decompose`
 
-**Verdict: Partially justified. Split functional from presentational.**
+**Key insight from GSD comparison:** GSD maintains context at 30-40% load by using fresh windows per task. hashb could adopt this pattern for decomposed tasks — each `/eng` session starts fresh, reads TODOS.md for state. This already happens naturally with session boundaries.
 
-Evidence:
-- formatting.md: 76 lines, ~1,140 tokens, loaded by 14/16 skills.
-- **Functional (justified):**
-  - Tables at column 0 (prevents rendering bugs): formatting.md:43-44
-  - Code blocks with language spec: formatting.md:49-50
-  - Workflow discipline (Next Step enforcement): formatting.md:66-77
-- **Presentational (questionable):**
-  - Progress bar indicators (formatting.md:10-27): Visually nice but consume tokens for rendering instructions the AI doesn't need to execute well.
-  - Discussion chunking (formatting.md:30-37): Useful for humans but the AI already handles this naturally.
-  - Time estimates (~N min): formatting.md:15 — particularly wasteful, as AI has no basis for time estimates.
+### H4. Formatting Overhead
 
-**Token cost:** ~570 tokens for presentational content per invocation x 14 skills in a full recipe = ~7,980 tokens of presentational overhead.
+**Verdict: Split functional from presentational.**
 
-**Recommendation:** Split into `formatting-core.md` (functional, ~35 lines) and `formatting-presentation.md` (optional, ~41 lines). All skills reference core. Only user-facing skills (explore, spec, design) reference presentation.
+formatting.md: 2,508 bytes (~627 tokens), loaded by 14/16 skills.
+
+| Content | Type | Tokens | Keep? |
+|---------|------|--------|-------|
+| Progress bar indicators | Presentational | ~125 | Optional |
+| Time estimates (~N min) | Presentational | ~30 | Remove — AI can't estimate |
+| Discussion chunking | Structural | ~50 | Keep |
+| Tables at column 0 | Functional | ~25 | Keep |
+| Code blocks with lang | Functional | ~20 | Keep |
+| Output style | Functional | ~40 | Keep |
+| Workflow discipline (Next Step) | Functional | ~337 | Keep |
+
+**Functional:** ~472 tokens. **Presentational:** ~155 tokens.
+
+**Fix:** Split into core (functional, ~40 lines) and presentation (optional, ~36 lines). All skills reference core. Only interactive skills reference presentation.
 
 ---
 
 ## 10. Scorecard
 
-| Dimension | Weight | Score | Weighted |
-|-----------|:------:|:-----:|:--------:|
-| A: Token & Context Efficiency | 20% | 62 | 12.4 |
-| B: AI Agent Effectiveness | 25% | 68 | 17.0 |
-| C: Process Coherence | 20% | 78 | 15.6 |
-| D: Missing Capabilities | 15% | 65 | 9.75 |
-| E: Engineering Quality | 10% | 75 | 7.5 |
-| F: Security Posture | 5% | 70 | 3.5 |
-| G: Inspiration Integration | 5% | 82 | 4.1 |
-| **Overall** | **100%** | | **69.85 -> 74** |
+| Dimension | Weight | Score | Weighted | Evidence threshold |
+|-----------|:------:|:-----:|:--------:|-------------------|
+| A: Token & Context Efficiency | 20% | 58 | 11.6 | All 16 skills violate D4. But architecture (paths:, on-demand skills) is sound. |
+| B: AI Agent Effectiveness | 25% | 64 | 16.0 | Hooks not used (CRITICAL). DRY violation. State lost on compaction. But workflow design is strong. |
+| C: Process Coherence | 20% | 75 | 15.0 | Versioning contradiction, QA loop gap, design handoff compressed. But skill pipeline and recipes are genuinely coherent. |
+| D: Missing Capabilities | 15% | 63 | 9.45 | Security paths incomplete. No secret/dep scanning. No CI/CD. But SDLC core coverage is comprehensive (11/17 phases). |
+| E: Engineering Quality | 10% | 74 | 7.4 | plugin.json stale. .history/ not gitignored. But 16-skill count justified, detail proportional. |
+| F: Security Posture | 5% | 65 | 3.25 | Guards advisory-only despite hooks API availability. Security paths narrow. But security rule content (3-tier OWASP/CWE) is excellent. |
+| G: Inspiration Integration | 5% | 80 | 4.0 | Coherent blend. Weaker than Superpowers on enforcement. Stronger on SDLC coverage and spec system. |
+| **Overall** | **100%** | | **66.7 -> 73** | Calibrated up 6 points: architecture is genuinely strong, issues are execution-level, most have straightforward fixes. |
 
-**Rounding and calibration:** Raw weighted = 69.85. Calibrated up to 74 because:
-- The architecture is genuinely strong — the issues are in execution, not design.
-- Most HIGH findings have straightforward fixes (not architectural rewrites).
-- The toolkit already outperforms "no workflow" significantly for AI-assisted development.
+**Calibration note:** Raw weighted = 66.7. Adjusted to 73 because: (1) the architecture genuinely works — these are execution gaps not design flaws, (2) most HIGH/CRITICAL findings have S/M effort fixes, (3) hashb already covers more SDLC phases than any comparable tool.
 
-**Band: Good (70-84).** Solid foundation, execution gaps, clear path to Excellent.
+**Band: Good (70-84).** Solid foundation, execution gaps, clear path to Excellent with the recommended fixes.
 
 ---
 
 ## 11. Prioritized Recommendations
 
-Ranked by impact (combination of severity, number of affected skills, and effort to fix).
+Ranked by impact (severity x affected scope x fix effort).
 
-| # | Recommendation | Severity | Effort | Affected |
-|---|---------------|----------|--------|----------|
-| 1 | **Expand security.md paths to cover .js, .jsx, .go, .java, .kt, .rb, .rs, .php, .swift, .vue, .svelte** | HIGH | S | All consumer projects |
-| 2 | **Extract branch/base detection into `skills/shared/preflight.md`** — single canonical block, add `gh` availability check | HIGH | S | 7 skills |
-| 3 | **Add `.history/` to recommended .gitignore** — stop committing full artifact chains to consumer repos | HIGH | S | /ship, /init |
-| 4 | **Fix plugin.json description: "15 skills" -> "16 skills"** | MEDIUM | S | Plugin metadata |
-| 5 | **Scaffold recommended guard hooks in /init** — `settings.json` PreToolUse hooks for destructive commands | HIGH | M | /init, guard.md |
-| 6 | **Split formatting.md into core (functional) + presentation (optional)** | MEDIUM | S | 14 skills |
-| 7 | **Align versioning: remove MICRO from /ship or adopt 4-digit in versioning.md** | MEDIUM | S | /ship, versioning.md |
-| 8 | **Add graceful degradation for `gh` CLI** — check availability, skip PR-dependent steps with warning | HIGH | M | 7+ skills |
-| 9 | **Add TODOS.md validation to skills that read it** — warn on format errors instead of silent misparsing | MEDIUM | M | /eng, /ship, /fix, /audit |
-| 10 | **Persist 3-strike state to temp file** — `.fix-state.json` survives context compaction | MEDIUM | S | /fix |
-| 11 | **Extract /spec decompose into a reference file** — loads only when decompose mode is invoked, saves ~250 lines for non-decompose invocations | MEDIUM | M | /spec |
-| 12 | **Add dependency vulnerability scanning to /ship or /audit** — `npm audit`, `pip audit`, etc. based on detected stack | MEDIUM | M | /ship, /audit |
-| 13 | **Add context budget guidance to recipes.md** — document estimated token overhead per recipe, recommend /spec decompose threshold | MEDIUM | S | recipes.md |
-| 14 | **Add CI template scaffolding to /init** — GitHub Actions / GitLab CI based on Project Profile Stack | MEDIUM | L | /init |
-| 15 | **Add scope clarification to shipping.md** — note that it applies to the hashb repo only | LOW | S | shipping.md |
+| # | Recommendation | Severity | Effort | Details |
+|---|---------------|----------|--------|---------|
+| 1 | **Scaffold guard hooks in /init** — `.claude/settings.json` PreToolUse + `.claude/hooks/guard-check.sh` | CRITICAL | M | See F-1 for working JSON config. PreToolUse fires before permission checks — enforcement cannot be bypassed. |
+| 2 | **Expand security.md paths** — add .js, .jsx, .go, .java, .kt, .rb, .rs, .php, .swift, .vue, .svelte | HIGH | S | One-line change per extension in security.md frontmatter. |
+| 3 | **Extract branch/base detection into `skills/shared/preflight.md`** — canonical block + `gh` check | HIGH | S | Eliminates 7-skill DRY violation and adds dependency graceful degradation. |
+| 4 | **Add `.history/` to .gitignore** — stop committing artifact chains to consumer repos | HIGH | S | Also update ship/SKILL.md:292 to not stage .history/. |
+| 5 | **Fix plugin.json: "15 skills" -> "16 skills"** | MEDIUM | S | One-word change. |
+| 6 | **Align versioning: remove MICRO from /ship** — use standard semver PATCH as smallest | MEDIUM | S | Delete 4-digit scheme from ship/SKILL.md:164-168 and :185. |
+| 7 | **Add QA loop termination: max 3 cycles** | MEDIUM | S | One paragraph addition to recipes.md and qa/SKILL.md. |
+| 8 | **Split formatting.md: core (functional) + presentation (optional)** | MEDIUM | S | Saves ~155 tokens x 14 skills per recipe. |
+| 9 | **Persist TDD checkpoints to `.tdd-checkpoint-{branch}.json`** | MEDIUM | S | Small addition to tdd/SKILL.md. Enables real resume on `/tdd continue`. |
+| 10 | **Persist 3-strike state to `.fix-state-{branch}.json`** | MEDIUM | S | Small addition to fix/SKILL.md. Survives context compaction. |
+| 11 | **Add secret scanning to /ship pre-landing review** — gitleaks integration | HIGH | M | Detect gitleaks availability, run on diff, block on findings. |
+| 12 | **Expand design handoff summary** — enumerate components, error table, data flow | MEDIUM | M | Additions to design/SKILL.md handoff section + eng/SKILL.md Phase 0. |
+| 13 | **Add retro memory read-back to /eng and /review** | MEDIUM | S | One-line addition to each: "Check Claude Code memories for relevant retro learnings." |
+| 14 | **Add dependency vulnerability scanning to /ship or /audit** | MEDIUM | M | Detect package manager, run audit command, fail on critical. |
+| 15 | **Add CI template scaffolding to /init** | MEDIUM | L | GitHub Actions / GitLab CI templates based on Project Profile Stack. |
 
-### Quick Wins (< 30 minutes each)
-- #1: Add file extensions to security.md paths (one-line change per extension)
-- #3: Add `.history/` to recommended .gitignore template
-- #4: Fix "15 skills" to "16 skills" in plugin.json
-- #7: Remove MICRO from /ship's versioning table
-- #15: Add scoping comment to shipping.md
-
-### Medium Effort (1-2 hours each)
-- #2: Create shared/preflight.md, update 7 skills to reference it
-- #5: Design and scaffold guard hooks configuration
-- #6: Split formatting.md, update 14 skill references
-- #8: Add gh CLI degradation pattern to preflight.md
-
-### Larger Effort (half day+)
-- #11: Refactor /spec into core + decompose reference file
-- #14: Design and implement CI template scaffolding
+### Quick Wins (< 30 minutes each): #2, #4, #5, #6, #7, #8, #9, #10, #13
+### Medium Effort (1-2 hours): #1, #3, #11, #12, #14
+### Larger Effort (half day+): #15
 
 ---
 
-## Methodology Notes
+## Methodology
 
 ### What was read
-Every `.md` file in the repository. Every `.json` configuration file. The `.gitignore`. Total: 35 files comprising 8,194 lines.
+Every `.md` file in the repository (35 files, 8,194 lines, 294,231 bytes). Every `.json` config. The `.gitignore`.
+
+### What was researched (web)
+- Claude Code hooks API: official docs at code.claude.com/docs/en/hooks-guide (PreToolUse, exit codes, JSON output, matchers, environment variables)
+- Superpowers: GitHub repo (obra/superpowers), 14 skills, mandatory TDD, hooks enforcement
+- OpenSpec: GitHub repo (Fission-AI/OpenSpec), propose/apply/archive workflow
+- GSD: GitHub repo (gsd-build/get-shit-done), context isolation, fresh-window-per-task
+- gstack: 23+ role-based skills, /plan-ceo-review
+- Framework comparison: Superpowers (93K stars), GSD (35K), gstack (50K)
 
 ### What was NOT done
-- No runtime testing (skills were not invoked to verify execution)
-- No comparison with external tools (Open Spec, cursor-tools, aider) — would require live access
-- No user testing (real users were not observed using the toolkit)
-- No token counting with a proper tokenizer (estimates use 15 tokens/line heuristic)
+- No runtime testing (skills not invoked)
+- No user testing (no real users observed)
+- No token counting with actual Claude tokenizer (byte/4 heuristic, +/- 15%)
 
 ### Confidence levels
-- File references and line numbers: verified against source (HIGH confidence)
-- Token estimates: heuristic-based, +/- 20% (MEDIUM confidence)
-- Scoring: calibrated against the rubric but inherently subjective (MEDIUM confidence)
-- Recommendations: based on evidence and engineering judgment (HIGH confidence)
+- File references and line numbers: verified against source (HIGH)
+- Token estimates: byte-based heuristic, more accurate than v1 line-based (MEDIUM-HIGH)
+- Hooks API details: verified against official docs (HIGH)
+- Comparable tool analysis: verified against GitHub repos + published articles (MEDIUM)
+- Scoring: calibrated against rubric with evidence thresholds (MEDIUM)
 
 ---
 
-*Report generated by Claude Opus 4.6. No findings were softened or omitted for diplomatic reasons.*
+*Report v2.0 generated by Claude Opus 4.6. Plan mode used. 4 parallel research agents + web research. No findings softened for diplomatic reasons.*
