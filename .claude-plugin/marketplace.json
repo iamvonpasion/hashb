@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Dev workflow plugins for Claude Code",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "plugins": [
     {
       "name": "hashb",
       "source": "./",
       "description": "Dev workflow toolkit — generic skills + domain-specific rules organized by vertical.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "hashb"
       },
