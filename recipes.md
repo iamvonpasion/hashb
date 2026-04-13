@@ -18,6 +18,11 @@ the skills to run in order, the gates between them, and what gets handed off.
 
 **Ship-readiness pattern:** The default chain before shipping is `/review` → `/qa` → `/ship`. After `/review` returns APPROVED or APPROVED WITH NOTES, the next step is `/qa` — not `/ship`. If `/review` findings are fixed, re-run `/review` to confirm, then proceed to `/qa`. The user can override this (e.g., "skip QA, just ship") — respect explicit overrides.
 
+**Simplification pattern:** `/simplify` cleans up code without changing behavior.
+It can be invoked standalone (`/simplify src/utils/`) or triggered by `/review`
+when quality smells are noted. After `/simplify`, re-run `/review` only if the
+simplification was significant (>5 files changed). Otherwise proceed to `/qa`.
+
 **Isolation pattern:** Feature work should use a git worktree or feature branch
 to isolate changes from the base branch. For recipes that use `/swarm`, worktrees
 are created automatically. For single-stream work, create a worktree before
@@ -40,7 +45,7 @@ cd .worktrees/<name>
 **Purpose:** Spec, design (if UI), engineer, build (TDD), review, test, and ship a feature.
 
 ```
-/spec → /design (if UI) → /eng → /tdd → /review → /qa → /fix loop → /ship → /retro
+/spec → /design (if UI) → /eng → /tdd → /review → /simplify (if warranted) → /qa → /fix loop → /ship → /retro
 ```
 
 > **Unclear requirements?** Start with `/explore` before `/spec`. Explore produces
@@ -54,6 +59,7 @@ cd .worktrees/<name>
 | 1 | `/eng` | Review architecture (if needed) + single-pass implementation review + TDD plan. 2 gates (scope, TDD plan) | User approves TDD plan |
 | 2 | `/tdd` | Execute TDD plan from `/eng`. RED → GREEN → REFACTOR per cycle. Full suite check at end | All tests green → proceed to review |
 | 2.5 | `/review` | Agent reviews diff against plan, rules, quality standards | Autonomous: APPROVED → QA, CHANGES REQUESTED → fix + re-review (max 2x), ESCALATE → user |
+| 2.6 | `/simplify` | Simplify code flagged by review (if quality smells noted) | Autonomous: complete → QA. Reverts → user |
 | 3 | `/qa` | Test: happy path, errors, edge cases. Requirement verification | Clean → ship. Bugs → `/fix` loop |
 | 4 | `/ship` | Merge base, run tests, version, changelog, PR | Output: PR URL |
 | 5 | `/retro` | What worked, what didn't, action items, persist learnings | Optional |
@@ -158,12 +164,13 @@ task complete. No other state is needed.
 **Purpose:** Review, test, and ship the current branch.
 
 ```
-/review → /qa → /fix loop → /ship → /retro
+/review → /simplify (if warranted) → /qa → /fix loop → /ship → /retro
 ```
 
 | Phase | Skill | What happens | Gate |
 |-------|-------|-------------|------|
 | 1 | `/review` | Review all code on branch | Autonomous gate |
+| 1.5 | `/simplify` | Simplify code flagged by review (if quality smells noted) | Autonomous: complete → QA |
 | 2 | `/qa` | Test changes on branch | Clean → ship. Issues → fix |
 | 3 | `/fix` | Address QA issues (only if needed) | Re-run `/qa` |
 | 4 | `/ship` | PR | Output: PR URL |

@@ -19,6 +19,7 @@ AI-assisted development toolkit.
 | `eng` | Engineering — scope, architecture decisions (if needed), implementation review, TDD | No |
 | `tdd` | Test-driven implementation — execute TDD plan from /eng, RED → GREEN → REFACTOR gates | Yes |
 | `review` | Peer code review — agent-to-agent, confidence-scored, blocks ship on low confidence | No |
+| `simplify` | Code simplification — complexity, duplication, dead code, naming. Preserves behavior | Yes |
 | `fix` | Systematic debugging with RCA | Yes |
 | `qa` | QA testing — report only, never fixes | No |
 | `retro` | Post-ship retrospective — what worked, what didn't, action items, memory persistence | No |
@@ -83,6 +84,7 @@ When user intent matches a skill, invoke it instead of acting freestyle:
 - Architecture, implementation plan, scope → `/hashb:eng`
 - TDD execution, "write the tests" → `/hashb:tdd`
 - Code review, "review my code" → `/hashb:review`
+- Simplify, clean up, reduce complexity, "this code is messy", too complex → `/hashb:simplify`
 - Bug, broken, error, fix → `/hashb:fix`
 - Test, QA, verify → `/hashb:qa`
 - Retrospective, "what went well" → `/hashb:retro`
