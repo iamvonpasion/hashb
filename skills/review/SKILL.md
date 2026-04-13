@@ -135,15 +135,17 @@ Does the code match the plan?
 
 ### 2B. Code Quality
 
-- **Naming** — Types, functions, variables named for what they represent,
-  not how they work.
-- **Complexity** — Functions >30 lines, nesting >3 levels, cyclomatic
-  complexity smells. Can it be simplified?
-- **Duplication** — Identical or near-identical logic in multiple places.
-  Flag with file:line references.
-- **Dead code** — Unreachable branches, unused imports, commented-out code.
 - **Error handling** — Errors caught and handled meaningfully? No swallowed
   exceptions, no generic catch-all without re-throw.
+- **Simplification scan** — Note obvious complexity, duplication, dead code, or
+  naming issues as SUGGESTION-severity findings. For anything beyond surface-level,
+  recommend `/simplify` as a follow-up rather than blocking the review.
+  Do NOT duplicate `/simplify`'s full analysis — flag the smell, defer the fix.
+
+> **Relationship to /simplify:** `/review` detects code quality smells at a
+> surface level. `/simplify` performs deep analysis and applies changes.
+> If significant complexity or duplication is noted, route through `/simplify`
+> before `/qa`.
 
 ### 2C. Test Coverage
 
@@ -289,6 +291,7 @@ REVIEW SCORE
 |---------|-----------|-----|
 | APPROVED | `/qa` | Behavior testing — review caught design issues, QA catches runtime issues |
 | APPROVED WITH NOTES | `/qa` | Proceed with warnings noted |
+| APPROVED but significant quality smells noted | `/simplify` then `/qa` | Clean up before QA |
 | CHANGES REQUESTED | Fix blockers → re-invoke `/review` | Max 2 cycles before escalating |
 | ESCALATE | Stop — present to user | Agent unsure, needs human judgment |
 

@@ -8,7 +8,7 @@
 
 **Dev workflow toolkit for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 
-16 skills that turn Claude into a structured development partner — from
+18 skills that turn Claude into a structured development partner — from
 spec to ship, with gates, reviews, and TDD enforcement at every step.
 
 Skills are generic. They work for any stack, any project. Domain context
@@ -50,10 +50,11 @@ Every skill enforces discipline that AI tends to skip:
 ```
   PLAN                    BUILD                   SHIP
   ─────────────────       ─────────────────       ─────────────────
-  /spec    requirements    /tdd     test-first     /review  peer review
-  /design  wireframes      /fix     debug + RCA    /qa      test as user
-  /research evaluate       /swarm   parallel work  /ship    PR + version
-  /eng     architecture                            /retro   retrospective
+  /spec    requirements    /tdd     test-first     /review    peer review
+  /design  wireframes      /fix     debug + RCA    /simplify  clean code
+  /research evaluate       /swarm   parallel work  /qa        test as user
+  /eng     architecture                            /ship      PR + version
+                                                   /retro     retrospective
 ```
 
 | Skill | What it does | Writes code? |
@@ -66,6 +67,7 @@ Every skill enforces discipline that AI tends to skip:
 | `eng` | Engineering — scope, architecture decisions, implementation review, TDD plan | |
 | `tdd` | Test-driven implementation — RED → GREEN → REFACTOR with checkpoints | Yes |
 | `review` | Peer code review — confidence-scored, blocks ship on low confidence | |
+| `simplify` | Code simplification — complexity, duplication, naming, dead code | Yes |
 | `fix` | Systematic debugging — evidence → root cause → regression test → fix | Yes |
 | `qa` | QA testing — browse like a real user, report bugs, never fix | |
 | `retro` | Post-ship retrospective — what worked, what didn't, action items | |
@@ -86,6 +88,7 @@ Every skill enforces discipline that AI tends to skip:
 "Plan the architecture"          → /hashb:eng arch
 "Write the code (TDD)"          → /hashb:tdd
 "Review before shipping"         → /hashb:review
+"Clean up this code"             → /hashb:simplify
 "Something is broken"            → /hashb:fix
 "Test this feature"              → /hashb:qa
 "Ship it"                        → /hashb:ship
@@ -102,11 +105,11 @@ Every skill enforces discipline that AI tends to skip:
 Chain skills together for common workflows. See [`recipes.md`](recipes.md) for details.
 
 ```
-Feature    /spec → /design (if UI) → /eng → /tdd → /review → /qa → /fix loop → /ship → /retro
-                   ──────────────────────────────────────────────────────────────────────────────
+Feature    /spec → /design (if UI) → /eng → /tdd → /review → /simplify (if needed) → /qa → /fix loop → /ship → /retro
+                   ─────────────────────────────────────────────────────────────────────────────────────────────────────
 Architecture       /research → /eng arch → iterate decisions → ADRs
 Bugfix             /fix → /review → /qa → /ship → /retro
-Release            /review → /qa → /fix loop → /ship → /retro
+Release            /review → /simplify (if needed) → /qa → /fix loop → /ship → /retro
 ```
 
 Each recipe has gates between phases. Skills don't silently proceed — they stop
@@ -168,7 +171,7 @@ Skills use it when available and fall back to grep when not. See `/hashb:init` f
 
 ```
 hashb/
-├── skills/                    16 skills
+├── skills/                    18 skills
 │   ├── quick/                 Quick planning
 │   ├── spec/                  Product specification
 │   ├── design/                UX/UI design
@@ -176,6 +179,7 @@ hashb/
 │   ├── eng/                   Engineering & architecture
 │   ├── tdd/                   Test-driven implementation
 │   ├── review/                Peer code review
+│   ├── simplify/              Code simplification
 │   ├── fix/                   Debugging with RCA
 │   ├── qa/                    QA testing
 │   ├── retro/                 Retrospective
