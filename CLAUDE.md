@@ -27,6 +27,7 @@ AI-assisted development toolkit.
 | `swarm` | Parallel work decomposition — plan, review, coordinate, merge streams | Yes |
 | `docs` | Document hygiene — find stale, obsolete, duplicate, scattered docs; sync, consolidate, update, remove | Yes |
 | `audit` | Compliance audit — scan entire repo against hashb standards, scored report | No |
+| `grill` | Architecture fitness evaluation — challenge existing decisions, ROI-ranked refactoring recommendations. **Optional, on-demand.** Requires `/understand` output | No* |
 | `init` | Bootstrap or update a repo for hashb compliance — Project Profile, rules, scaffolds | Yes |
 
 See `recipes.md` for workflow chains (feature, bugfix, release, architecture, exploration).
@@ -92,6 +93,7 @@ When user intent matches a skill, invoke it instead of acting freestyle:
 - Parallel work, decompose → `/hashb:swarm`
 - Doc cleanup, stale docs, sync docs → `/hashb:docs`
 - Compliance check, audit → `/hashb:audit`
+- Architecture fitness, challenge existing decisions, over-engineering audit, refactoring ROI, "is our architecture still good" → `/hashb:grill` (opt-in; never auto-invoked)
 - Setup, bootstrap, init → `/hashb:init`
 ```
 

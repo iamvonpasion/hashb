@@ -279,4 +279,65 @@ The user decides when to move from exploration to action.
 - If graphify is installed, run `/graphify . --mcp` before `/understand` for graph-accelerated analysis.
 - For very large codebases, scope `/understand` to a subsystem first: `/understand src/billing/`.
 - If hashb is already set up, skip `/init` and go straight to `/audit`.
+- **Optional follow-up:** after `/audit`, run `/grill` if you want an architecture fitness evaluation (over/under-engineering, refactoring ROI). Not part of the default chain — see the **Architecture Health Check** recipe below.
+
+---
+
+## Recipe: Architecture Health Check (Optional / On-Demand)
+
+**Purpose:** Evaluate the fitness of an existing architecture. Challenge decisions,
+detect over/under-engineering, produce an ROI-ranked list of refactoring
+opportunities.
+
+> **This is an opt-in recipe.** `/grill` is never auto-invoked. It does not run
+> as part of Feature, Bugfix, Release, or Brownfield Onboarding. Users initiate
+> it deliberately when they want an architecture fitness evaluation.
+
+```
+/understand → /grill → [/eng arch per revisited decision] → [/simplify per flagged module]
+```
+
+| Phase | Skill | What happens | Gate |
+|-------|-------|-------------|------|
+| 1 | `/understand` | Map architecture (if map is missing or > 30 days old) | User validates architecture map |
+| 2 | `/grill` | Five evaluation passes: Simplicity, Structural Fitness, Coupling, Technology Fit, Assumption Freshness. Produces scored report with ROI matrix | User reviews raw findings (gate 1) and final report (gate 2) |
+| 3 | `/eng arch` | Redesign each flagged decision (one per session) | Per-decision confirmation |
+| 4 | `/simplify` | Reduce complexity in modules flagged by grill | Standard simplify flow |
+
+**Use when:**
+- Onboarding to a brownfield codebase and wanting more than just a map
+- Before a major refactoring initiative
+- Quarterly or annual architecture health review
+- When the team suspects architectural debt is slowing delivery
+- After significant growth (team size, traffic, feature scope) that may have outgrown original decisions
+
+**Do NOT use as:**
+- A per-feature step (that's overhead — grill is for infrequent, deliberate evaluation)
+- A replacement for `/audit` (different question: fitness, not hashb compliance)
+- A replacement for `/understand` (grill requires `/understand` output as input)
+
+**Example:**
+```
+/understand
+# → maps architecture, writes .understand/architecture-map.md
+
+/grill
+# → challenges decisions, produces .grill/grill-{date}.md with:
+#   - fitness scores per dimension
+#   - ROI-ranked refactoring matrix
+#   - explicit handoffs to /eng arch and /simplify
+
+/eng arch  # run per decision worth revisiting, one at a time
+/simplify  # run per module flagged for complexity reduction
+```
+
+**Tips:**
+- `/grill` is idempotent — re-run to track fitness trend over time. Prior reports
+  are preserved under `.grill/`.
+- Score trends ARE the fitness function: dropping scores indicate drift; rising
+  scores indicate successful remediation.
+- If the repo has no ADRs, the Assumption Freshness pass runs in degraded mode
+  (inferred from code). Still useful, but labeled as speculative.
+- Effort estimates in the ROI matrix are AI-guessed and labeled as rough —
+  validate with the team before prioritizing.
 
